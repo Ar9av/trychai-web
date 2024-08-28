@@ -1,0 +1,136 @@
+'use client'
+import Loader from '@/components/loader';
+import Sidebar from '@/components/sidebar';
+import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
+import React, { useEffect, useState } from 'react';
+import { LuUser } from "react-icons/lu";
+import { Input, Spinner } from '@nextui-org/react';
+import ApiData from '@/components/apiData';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import app, { db } from '@/config';
+import { collection, getDocs } from 'firebase/firestore';
+import { FaArrowRight } from 'react-icons/fa';
+
+const Page = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [showApiData, setShowApiData] = useState(false);
+    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+    const auth = getAuth(app);
+    const [user, setUser] = useState(null);
+    const [savedText, setSavedText] = useState('');
+    const [inputValue, setInputValue] = useState('');
+    const [submittedTexts, setSubmittedTexts] = useState([]); // Array to hold all submitted texts
+    const router = useRouter();
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
+    const reportResponse = [
+        "Generating and Polishing the report...",
+        "Creating Outline for the report...",
+        "Searching the Internet for sources and relevant content..."
+    ];
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowApiData(true);
+        }, 4000); // 4 seconds timer
+
+        return () => clearTimeout(timer); // Cleanup timer on component unmount
+    }, []);
+
+    useEffect(() => {
+        if (!showApiData) {
+            const messageTimer = setInterval(() => {
+                setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % reportResponse.length);
+            }, 3000); // Change message every 3 seconds
+
+            return () => clearInterval(messageTimer); // Cleanup timer on component unmount
+        }
+    }, [showApiData, reportResponse.length]);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setUser(user);
+            }
+        })
+        return () => unsubscribe();
+    }, [auth])
+
+    useEffect(() => {
+        const storedText = localStorage.getItem('searchText');
+        if (storedText) {
+            setSavedText(storedText);
+        }
+    }, []);
+
+    const handleInputChange = (e) => {
+        setInputValue(e.target.value);
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && inputValue.trim() !== '') {
+            setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]); // Add the new text to the list
+            setInputValue(''); // Clear the input field
+        }
+    };
+
+    return (
+        <div className="relative min-h-screen bg-black flex flex-col items-center justify-center">
+            <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
+            <button
+                onClick={toggleSidebar}
+                className={`absolute top-1/2 transform -translate-y-1/2 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'left-[240px]' : 'left-4'}`}
+            >
+                {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
+            </button>
+            <div className='absolute top-5 right-4 flex flex-col w-[80%] '>
+                <div className='flex justify-between w-full'>
+                    <h1 className='text-2xl font-semibold tracking-wide'>TrychAI</h1>
+                    <div className='flex gap-2 items-center'>
+                        <LuUser size={25} />
+                        <p>{user ? user.displayName : "SignIn"}</p>
+                    </div>
+                </div>
+                <div className='border-2 mt-6 w-[80%] mx-auto border-blue-950'></div>
+            </div>
+
+            {/* Middle Div */}
+            <div className='absolute right-4 top-28 w-[80%]'>
+                <div className='flex gap-5 items-center'>
+                    {!showApiData ? <Spinner color='default' /> : ""}
+                    <p className='text-2xl font-semibold'>{savedText}</p>
+                </div>
+                <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
+                {!showApiData ? <Loader /> : <ApiData />}
+
+                {submittedTexts.map((text, index) => (
+                    <div key={index}>
+                        <div className='flex gap-5 items-center'>
+                            {!showApiData ? <Spinner color='default' /> : ""}
+                            <p className='text-2xl font-semibold'>{text}</p>
+                        </div>
+                        <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
+                        {!showApiData ? <Loader /> : <ApiData />}
+                    </div>
+                ))}
+            </div>
+            <div className="relative flex justify-center">
+                <input
+                    className='fixed bottom-3 w-[40%] right-[40%] bg-[#1e1e1e] text-white p-2 rounded-full pl-4 pr-10 outline-none'
+                    style={{
+                        border: '1px solid #7083cf',
+                    }}
+                    placeholder="Ask a follow-up question..."
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyPress={handleKeyPress}
+                />
+            </div>
+        </div>
+    );
+};
+
+export default Page;
