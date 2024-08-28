@@ -158,7 +158,7 @@ const Page = () => {
                     <p>2024 Smart Home IOT devices market in US </p>
                 </div>
                 <div onClick={() => { }} className='bg-gray-500 text-xs cursor-pointer px-4 py-2 rounded-md'>
-                    <p>Germany's Beer Industry</p>
+                    <p>Germany&apos;s Beer Industry</p>
                 </div>
                 <div onClick={() => { }} className='bg-gray-500 text-xs cursor-pointer px-4 py-2 rounded-md'>
                     <p>Augmented and Virtual Reality Industry</p>
