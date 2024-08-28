@@ -50,7 +50,7 @@ export default function NavBar() {
       </NavbarContent>
       <NavbarContent justify="end">
         <NavbarItem className="hidden sm:flex">
-          <Button
+          {/* <Button
             as={Link}
             color="primary"
             href="#"
@@ -58,7 +58,12 @@ export default function NavBar() {
             className="hidden sm:flex"
           >
             Get Started
-          </Button>
+          </Button> */}
+          <Link href='chatBox'>
+              <Button color="primary" variant="solid">
+                Get Started
+              </Button>
+              </Link>
         </NavbarItem>
         <NavbarItem>
           <ThemeSwitcher />

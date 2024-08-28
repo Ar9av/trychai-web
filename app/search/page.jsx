@@ -22,6 +22,7 @@ const Page = () => {
     const [inputValue, setInputValue] = useState('');
     const [submittedTexts, setSubmittedTexts] = useState([]); // Array to hold all submitted texts
     const router = useRouter();
+
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
@@ -78,7 +79,7 @@ const Page = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-black flex flex-col items-center justify-center">
+        <div className="relative min-h-screen bg-black flex">
             <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
             <button
                 onClick={toggleSidebar}
@@ -86,48 +87,47 @@ const Page = () => {
             >
                 {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
             </button>
-            <div className='absolute top-5 right-4 flex flex-col w-[80%] '>
-                <div className='flex justify-between w-full'>
-                    <h1 className='text-2xl font-semibold tracking-wide'>TrychAI</h1>
-                    <div className='flex gap-2 items-center'>
+            <div className={`flex flex-col items-center flex-grow transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-8'}`}>
+                <div className="w-full flex justify-between p-4">
+                    <h1 className="text-2xl font-semibold tracking-wide text-white">TrychAI</h1>
+                    <div className="flex gap-2 items-center text-white">
                         <LuUser size={25} />
                         <p>{user ? user.displayName : "SignIn"}</p>
                     </div>
                 </div>
-                <div className='border-2 mt-6 w-[80%] mx-auto border-blue-950'></div>
-            </div>
+                <div className="border-2 w-3/4 border-blue-950 my-6"></div>
 
-            {/* Middle Div */}
-            <div className='absolute right-4 top-28 w-[80%]'>
-                <div className='flex gap-5 items-center'>
-                    {!showApiData ? <Spinner color='default' /> : ""}
-                    <p className='text-2xl font-semibold'>{savedText}</p>
-                </div>
-                <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
-                {!showApiData ? <Loader /> : <ApiData />}
-
-                {submittedTexts.map((text, index) => (
-                    <div key={index}>
-                        <div className='flex gap-5 items-center'>
-                            {!showApiData ? <Spinner color='default' /> : ""}
-                            <p className='text-2xl font-semibold'>{text}</p>
-                        </div>
-                        <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
-                        {!showApiData ? <Loader /> : <ApiData />}
+                <div className='w-full px-4'>
+                    <div className='flex gap-5 items-center'>
+                        {!showApiData ? <Spinner color='default' /> : ""}
+                        <p className='text-2xl font-semibold text-white'>{savedText}</p>
                     </div>
-                ))}
-            </div>
-            <div className="relative flex justify-center">
-                <input
-                    className='fixed bottom-3 w-[40%] right-[40%] bg-[#1e1e1e] text-white p-2 rounded-full pl-4 pr-10 outline-none'
-                    style={{
-                        border: '1px solid #7083cf',
-                    }}
-                    placeholder="Ask a follow-up question..."
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyPress={handleKeyPress}
-                />
+                    <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
+                    {!showApiData ? <Loader /> : <ApiData />}
+
+                    {submittedTexts.map((text, index) => (
+                        <div key={index}>
+                            <div className='flex gap-5 items-center'>
+                                {!showApiData ? <Spinner color='default' /> : ""}
+                                <p className='text-2xl font-semibold text-white'>{text}</p>
+                            </div>
+                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
+                            {!showApiData ? <Loader /> : <ApiData />}
+                        </div>
+                    ))}
+                </div>
+                <div className="relative flex justify-center w-full mt-4">
+                    <input
+                        className='fixed bottom-3 w-[40%] max-w-lg bg-[#1e1e1e] text-white p-2 rounded-full pl-4 pr-10 outline-none'
+                        style={{
+                            border: '1px solid #7083cf',
+                        }}
+                        placeholder="Ask a follow-up question..."
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onKeyPress={handleKeyPress}
+                    />
+                </div>
             </div>
         </div>
     );
