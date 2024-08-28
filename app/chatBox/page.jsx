@@ -3,19 +3,19 @@ import Sidebar from '@/components/sidebar';
 import React, { useEffect, useState } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
 import { Input, Textarea, Switch } from '@nextui-org/react';
-import { FaArrowRight } from 'react-icons/fa'; // Import the arrow icon
+import { FaArrowRight } from 'react-icons/fa';
 import Link from 'next/link';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import app from '@/config';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import app from '@/config';
 
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [isAdvancedOptionsOn, setIsAdvancedOptionsOn] = useState(false); // State for the switch
-    const [searchText, setSearchText] = useState(''); // State to store the search text
-    const [savedText,setSavedText] = useState('')
+    const [isAdvancedOptionsOn, setIsAdvancedOptionsOn] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [savedText, setSavedText] = useState('')
     const auth = getAuth(app);
     const router = useRouter();
     const [user, setUser] = useState(null);
@@ -51,8 +51,22 @@ const Page = () => {
         if (storedText) {
             setSavedText(storedText);
         }
+
+        const mediaQuery = window.matchMedia('(max-width: 768px)');
+        if (mediaQuery.matches) {
+            setIsSidebarOpen(false);
+        }
+
+        const handleResize = () => {
+            if (window.innerWidth <= 768) {
+                setIsSidebarOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
-    
+
     const handleSearchClick = () => {
         if (!user) {
             toast.error("Please log in to continue");
@@ -67,92 +81,84 @@ const Page = () => {
             router.push("/search");
         }
     };
-    
 
     const handleSignInClick = () => {
         if (!user) {
-            router.push('/login'); // Redirect to the login page if the user is not logged in
+            router.push('/login');
         }
     };
 
     return (
-        <div className="relative min-h-screen bg-black flex flex-col items-center justify-center">
+        <div className="relative min-h-screen bg-black flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar}></div>
             <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
             <button
                 onClick={toggleSidebar}
-                className={`absolute top-1/2 transform -translate-y-1/2 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'left-[260px]' : 'left-4'}`}
+                className={`absolute top-4 left-4 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out z-50 sm:top-1/2 sm:-translate-y-1/2 ${isSidebarOpen ? 'sm:left-[260px]' : 'sm:left-4'}`}
             >
                 {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
             </button>
-            <div onClick={handleSignInClick} className='absolute cursor-pointer right-10 top-10'>
+            <div onClick={handleSignInClick} className='absolute cursor-pointer right-4 top-4 sm:right-10 sm:top-10'>
                 <p>{user ? user.displayName : "SignIn"}</p>
             </div>
-            <div className="flex flex-col items-center text-center">
-                {/* <h1 className="text-7xl font-bold mb-5 -tracking-tighter text-white">TrychAI</h1> */}
-                <h1 className="text-4xl font-ligt tracking-tighter mx-auto md:text-6xl bg-gradient-to-b from-foreground to-foreground/70 text-transparent bg-clip-text text-pretty">
-           {" "}
-            <span className="bg-gradient-to-t from-light to-foreground text-transparent bg-clip-text border-none">
-              TrychAI
-            </span>{" "}
-          </h1>
-                <h4 className="text-2xl font-ligt tracking-tighter mx-auto bg-gradient-to-b from-foreground to-foreground/70 text-transparent bg-clip-text text-pretty">AI Agented Market Research</h4>
-                <div className="relative flex w-full flex-wrap md:flex-nowrap gap-4">
-                    <div className="relative ">
-                        <Textarea
-                            placeholder="Type the industry in which you want the report to be..."
-                            value={searchText} // Bind textarea to state
-                            onChange={(e) => setSearchText(e.target.value)} // Update state on change
-                            style={{ height: '100px', width: '600px' }}
-                            className="w-full border-5 rounded-lg border-[#7083cf]"
-                        />
-                        <FaArrowRight
-                            className="absolute cursor-pointer bottom-2 right-2 text-[#7083cf]"
-                            size={20}
-                            onClick={handleSearchClick} // Save text on click
-                        />
-                    </div>
+            <div className="flex flex-col items-center text-center w-full max-w-3xl">
+                <h1 className="text-4xl font-light tracking-tighter mx-auto md:text-6xl bg-gradient-to-b from-foreground to-foreground/70 text-transparent bg-clip-text text-pretty mb-2">
+                    <span className="bg-gradient-to-t from-light to-foreground text-transparent bg-clip-text border-none">
+                        TrychAI
+                    </span>
+                </h1>
+                <h4 className="text-xl sm:text-2xl font-light tracking-tighter mx-auto bg-gradient-to-b from-foreground to-foreground/70 text-transparent bg-clip-text text-pretty mb-4">AI Agented Market Research</h4>
+                <div className="relative w-full">
+                    <Textarea
+                        placeholder="Type the industry in which you want the report to be..."
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        className="w-full h-[100px] border-5 rounded-lg border-[#7083cf] p-2 mb-4"
+                    />
+                    <FaArrowRight
+                        className="absolute cursor-pointer bottom-6 right-2 text-[#7083cf]"
+                        size={20}
+                        onClick={handleSearchClick}
+                    />
                 </div>
             </div>
-            <div className='flex items-start justify-start gap-3 mt-2 w-[41%]'>
+            <div className='flex items-center justify-start gap-3 mt-2 w-full max-w-3xl'>
                 <p>Advanced Options</p>
                 <Switch defaultSelected={false} size='sm' color='default' onChange={toggleAdvancedOptions} />
             </div>
             {isAdvancedOptionsOn && (
-                <div className='mt-8 flex flex-col gap-6 w-[41%] flex-wrap'>
-                    <div className='w-[70%] flex gap-6'>
-                        <p>Persona</p>
+                <div className='mt-8 flex flex-col gap-6 w-full max-w-3xl'>
+                    <div className='w-full sm:w-[70%] flex flex-col sm:flex-row gap-6'>
+                        <p className="sm:w-1/4">Persona</p>
                         <Textarea
                             placeholder="Persona for which the report needs to be generated..."
-                            style={{ height: '20px', width: '500px' }}
                             className="w-full border-5 rounded-lg border-[#7083cf]"
                         />
                     </div>
-                    <div className='flex justify-between w-full'>
-                        <div>
+                    <div className='flex flex-col sm:flex-row justify-between w-full gap-6'>
+                        <div className="w-full sm:w-1/2">
                             <p>Outline</p>
                             <Textarea
                                 placeholder="Create a report Outline to fit in the way your report needs to be generated..."
-                                style={{ height: '80px', width: '250px' }}
-                                className="w-full border-5 rounded-lg border-[#7083cf]"
+                                className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
                             />
                         </div>
-                        <div>
+                        <div className="w-full sm:w-1/2">
                             <p>Sources</p>
                             <Textarea
                                 placeholder="Enter the sources/links in new lines..."
-                                style={{ height: '80px', width: '250px' }}
-                                className="w-full border-5 rounded-lg border-[#7083cf]"
+                                className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
                             />
                         </div>
                     </div>
                 </div>
             )}
-            <div className='mt-8 flex gap-6 w-[50%] justify-center flex-wrap'>
+            <div className='mt-8 flex flex-wrap gap-4 w-full max-w-3xl justify-center'>
                 <div onClick={() => { }} className='bg-gray-500 text-xs cursor-pointer px-4 py-2 rounded-md'>
                     <p>2024 Smart Home IOT devices market in US </p>
                 </div>
                 <div onClick={() => { }} className='bg-gray-500 text-xs cursor-pointer px-4 py-2 rounded-md'>
-                    <p>Germany’s Beer Industry</p>
+                    <p>Germany's Beer Industry</p>
                 </div>
                 <div onClick={() => { }} className='bg-gray-500 text-xs cursor-pointer px-4 py-2 rounded-md'>
                     <p>Augmented and Virtual Reality Industry</p>
