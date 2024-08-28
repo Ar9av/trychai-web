@@ -37,7 +37,7 @@ export default function NavBar() {
       <NavbarContent className="sm:hidden pr-3" justify="center">
         <NavbarBrand>
           <span className="font-light tracking-tighter text-inherit text-lg">
-            Acme
+            TrychAI
           </span>
         </NavbarBrand>
       </NavbarContent>

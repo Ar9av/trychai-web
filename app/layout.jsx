@@ -6,8 +6,8 @@ import PlausibleProvider from "next-plausible";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Acme",
-  description: "Landing Page template using NextJs 14, NextUI, TailwindCSS.",
+  title: "TrychAI",
+  description: "Generate Market Report on the fly",
 };
 
 export default function RootLayout({ children }) {
