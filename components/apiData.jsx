@@ -1,11 +1,11 @@
 'use client'
-import React, { useEffect, useState } from 'react'
-import Sources from './sources'
-import { db } from '@/config'
-import { addDoc, collection } from 'firebase/firestore'
+import React, { useEffect, useState } from 'react';
+import Sources from './sources';
+import { db } from '@/config';
+import { addDoc, collection } from 'firebase/firestore';
 
 const ApiData = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(window.innerWidth < 768);
 
   const keyResponse = [
     {
@@ -42,12 +42,23 @@ const ApiData = () => {
   }, []);
 
   const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+    setIsCollapsed((prev) => !prev);
   };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className='relative flex w-full' style={{ height: '100vh' }}>
-      <div className={`transition-all duration-500 ${isCollapsed ? 'w-full' : 'w-[60%]'} overflow-y-auto h-full p-4`}>
+      <div className={`transition-all duration-500 ${isCollapsed ? 'w-full' : 'w-[70%]'} overflow-y-auto h-full p-4`}>
         <p className='text-xm'>
           The Indian tyre industry is a significant part of the country&apos;s automotive sector, playing a
           crucial role in ensuring vehicle safety and performance. It is characterized by a highly
@@ -58,7 +69,7 @@ const ApiData = () => {
           tyres being the dominant type. The industry is also seeing a shift towards environmentally
           friendly and fuel-efficient tyres to align with the government&apos;s sustainability goals.
         </p>
-        <div className='mt-6 '>
+        <div className='mt-6'>
           <h2 className='text-xl font-medium'>Key Points to Consider:</h2>
           <ul>
             {keyResponse.map((item, index) => (
@@ -68,7 +79,7 @@ const ApiData = () => {
         </div>
       </div>
 
-      <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[40%] ml-8'}`}>
+      <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
         {!isCollapsed && <Sources />}
       </div>
 
@@ -88,7 +99,7 @@ const ApiData = () => {
         </svg>
       </button>
     </div>
-  )
-}
+  );
+};
 
-export default ApiData
+export default ApiData;

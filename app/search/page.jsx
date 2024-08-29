@@ -8,8 +8,7 @@ import { Input, Spinner } from '@nextui-org/react';
 import ApiData from '@/components/apiData';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import app, { db } from '@/config';
-import { collection, getDocs } from 'firebase/firestore';
+import app from '@/config';
 import { FaArrowRight } from 'react-icons/fa';
 
 const Page = () => {
@@ -20,8 +19,24 @@ const Page = () => {
     const [user, setUser] = useState(null);
     const [savedText, setSavedText] = useState('');
     const [inputValue, setInputValue] = useState('');
-    const [submittedTexts, setSubmittedTexts] = useState([]); // Array to hold all submitted texts
+    const [submittedTexts, setSubmittedTexts] = useState([]); 
     const router = useRouter();
+
+    // Function to check screen size and set sidebar state
+    const checkScreenSize = () => {
+        if (window.innerWidth <= 768) {
+            setIsSidebarOpen(false);
+        }
+    };
+
+    useEffect(() => {
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+
+        return () => {
+            window.removeEventListener('resize', checkScreenSize);
+        };
+    }, []);
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
@@ -36,18 +51,18 @@ const Page = () => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowApiData(true);
-        }, 4000); // 4 seconds timer
+        }, 4000);
 
-        return () => clearTimeout(timer); // Cleanup timer on component unmount
+        return () => clearTimeout(timer);
     }, []);
 
     useEffect(() => {
         if (!showApiData) {
             const messageTimer = setInterval(() => {
                 setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % reportResponse.length);
-            }, 3000); // Change message every 3 seconds
+            }, 3000);
 
-            return () => clearInterval(messageTimer); // Cleanup timer on component unmount
+            return () => clearInterval(messageTimer);
         }
     }, [showApiData, reportResponse.length]);
 
@@ -73,8 +88,8 @@ const Page = () => {
 
     const handleKeyPress = (e) => {
         if (e.key === 'Enter' && inputValue.trim() !== '') {
-            setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]); // Add the new text to the list
-            setInputValue(''); // Clear the input field
+            setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]);
+            setInputValue('');
         }
     };
 
