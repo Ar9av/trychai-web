@@ -1,43 +1,29 @@
+// components/apiData.jsx
 'use client'
 import React, { useEffect, useState } from 'react';
 import Sources from './sources';
 import { db } from '@/config';
 import { addDoc, collection } from 'firebase/firestore';
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import 'github-markdown-css'; // Import GitHub markdown CSS
 
 const ApiData = () => {
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth < 768);
 
-  const keyResponse = [
-    {
-      id: 1,
-      data: `Market Growth: The India tyre market is experiencing robust growth, with a compound annual growth rate (CAGR) of 8.71% during the forecast period 2023-2030. It is projected to reach USD 25.50 billion by FY2031 from USD 13.11 billion in FY2023, driven by the rapidly growing automotive industry in the country.`
-    },
-    {
-      id: 2,
-      data: `Demand Factors: The surge in demand for tyres is attributed to the rising disposable income, growing middle-class population, and government initiatives such as "Make in India". Infrastructure development and the push for electric vehicles have also contributed to market growth.`
-    },
-    {
-      id: 3,
-      data: `Market Growth: The India tyre market is experiencing robust growth, with a compound annual growth rate (CAGR) of 8.71% during the forecast period 2023-2030. It is projected to reach USD 25.50 billion by FY2031 from USD 13.11 billion in FY2023, driven by the rapidly growing automotive industry in the country.`
-    },
-    {
-      id: 4,
-      data: `Demand Factors: The surge in demand for tyres is attributed to the rising disposable income, growing middle-class population, and government initiatives such as "Make in India". Infrastructure development and the push for electric vehicles have also contributed to market growth.`
-    }
-  ];
-
-  const addDataToFirestore = async () => {
-    try {
-      const docRef = await addDoc(collection(db, "searchData"), {
-        keyResponse: keyResponse
-      });
-      console.log("Document written with ID: ", docRef.id);
-    } catch (e) {
-      console.error("Error adding document: ", e);
-    }
-  };
-
   useEffect(() => {
+    const addDataToFirestore = async () => {
+      try {
+        const keyResponse = JSON.parse(localStorage.getItem('apiData')) || [];
+        const docRef = await addDoc(collection(db, "searchData"), {
+          keyResponse: keyResponse.summary
+        });
+        console.log("Document written with ID: ", docRef.id);
+      } catch (e) {
+        console.error("Error adding document: ", e);
+      }
+    };
     addDataToFirestore();
   }, []);
 
@@ -56,31 +42,22 @@ const ApiData = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const apiData = JSON.parse(localStorage.getItem('apiData')) || [];
+
   return (
     <div className='relative flex w-full' style={{ height: '100vh' }}>
       <div className={`transition-all duration-500 ${isCollapsed ? 'w-full' : 'w-[70%]'} overflow-y-auto h-full p-4`}>
-        <p className='text-xm'>
-          The Indian tyre industry is a significant part of the country&apos;s automotive sector, playing a
-          crucial role in ensuring vehicle safety and performance. It is characterized by a highly
-          competitive market with key players such as MRF Tyres, Apollo Tyres, CEAT, JK Tyre, and
-          Bridgestone India Private Limited. These companies are expanding their production capacities
-          and establishing new manufacturing facilities to meet the growing demand for tyres in India.
-          The market is segmented into passenger, commercial, and off-the-road (OTR) tyres, with radial
-          tyres being the dominant type. The industry is also seeing a shift towards environmentally
-          friendly and fuel-efficient tyres to align with the government&apos;s sustainability goals.
-        </p>
-        <div className='mt-6'>
-          <h2 className='text-xl font-medium'>Key Points to Consider:</h2>
-          <ul>
-            {keyResponse.map((item, index) => (
-              <li key={index} className='my-5 list-disc ml-5'>{item.data}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
+        <ReactMarkdown 
+          className='markdown-body' // Apply GitHub markdown CSS class
+          remarkPlugins={[remarkGfm]} 
+          rehypePlugins={[rehypeRaw]}
+        >
+          {apiData.summary}
+        </ReactMarkdown>
+      </div> 
 
       <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
-        {!isCollapsed && <Sources />}
+        {!isCollapsed && apiData.sources && <Sources data={apiData.sources} />}
       </div>
 
       <button 

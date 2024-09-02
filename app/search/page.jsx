@@ -22,7 +22,6 @@ const Page = () => {
     const [submittedTexts, setSubmittedTexts] = useState([]); 
     const router = useRouter();
 
-    // Function to check screen size and set sidebar state
     const checkScreenSize = () => {
         if (window.innerWidth <= 768) {
             setIsSidebarOpen(false);
@@ -86,10 +85,22 @@ const Page = () => {
         setInputValue(e.target.value);
     };
 
-    const handleKeyPress = (e) => {
+    const handleKeyPress = async (e) => {
         if (e.key === 'Enter' && inputValue.trim() !== '') {
+            await fetchAndStoreApiData(inputValue);
             setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]);
             setInputValue('');
+        }
+    };
+
+    const fetchAndStoreApiData = async (topic) => {
+        try {
+            const response = await fetch(`https://91e2nq3dy2.execute-api.us-east-2.amazonaws.com/dev/fast?topic=${encodeURIComponent(topic)}`);
+            const data = await response.json();
+            localStorage.setItem('apiData', JSON.stringify(data));
+            console.log("API Data stored: ", data);
+        } catch (error) {
+            console.error("Error fetching or storing API data: ", error);
         }
     };
 

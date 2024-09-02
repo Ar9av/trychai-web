@@ -11,6 +11,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import app from '@/config';
 
+
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isAdvancedOptionsOn, setIsAdvancedOptionsOn] = useState(false);
@@ -67,7 +68,7 @@ const Page = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const handleSearchClick = () => {
+    const handleSearchClick = async () => {
         if (!user) {
             toast.error("Please log in to continue");
         } else {
@@ -78,6 +79,10 @@ const Page = () => {
                 localStorage.setItem('searchHistory', JSON.stringify(history));
             }
             localStorage.setItem('searchText', currentSearch);
+
+            // Fetch API data
+            await fetchAndStoreApiData(currentSearch);
+
             router.push("/search");
         }
     };
@@ -85,6 +90,17 @@ const Page = () => {
     const handleSignInClick = () => {
         if (!user) {
             router.push('/login');
+        }
+    };
+
+    const fetchAndStoreApiData = async (topic) => {
+        try {
+            const response = await fetch(`https://91e2nq3dy2.execute-api.us-east-2.amazonaws.com/dev/fast?topic=${encodeURIComponent(topic)}`);
+            const data = await response.json();
+            localStorage.setItem('apiData', JSON.stringify(data));
+            console.log("API Data stored: ", data);
+        } catch (error) {
+            console.error("Error fetching or storing API data: ", error);
         }
     };
 
