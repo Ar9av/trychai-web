@@ -2,7 +2,7 @@
 import Sidebar from '@/components/sidebar';
 import React, { useEffect, useState } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
-import { Input, Textarea, Switch } from '@nextui-org/react';
+import { Textarea, Switch } from '@nextui-org/react';
 import { FaArrowRight } from 'react-icons/fa';
 import Link from 'next/link';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -11,12 +11,10 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import app from '@/config';
 
-
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isAdvancedOptionsOn, setIsAdvancedOptionsOn] = useState(false);
     const [searchText, setSearchText] = useState('');
-    const [savedText, setSavedText] = useState('')
     const auth = getAuth(app);
     const router = useRouter();
     const [user, setUser] = useState(null);
@@ -50,7 +48,7 @@ const Page = () => {
     useEffect(() => {
         const storedText = localStorage.getItem('searchText');
         if (storedText) {
-            setSavedText(storedText);
+            setSearchText(storedText);
         }
 
         const mediaQuery = window.matchMedia('(max-width: 768px)');
@@ -79,10 +77,6 @@ const Page = () => {
                 localStorage.setItem('searchHistory', JSON.stringify(history));
             }
             localStorage.setItem('searchText', currentSearch);
-
-            // Fetch API data
-            await fetchAndStoreApiData(currentSearch);
-
             router.push("/search");
         }
     };
@@ -90,17 +84,6 @@ const Page = () => {
     const handleSignInClick = () => {
         if (!user) {
             router.push('/login');
-        }
-    };
-
-    const fetchAndStoreApiData = async (topic) => {
-        try {
-            const response = await fetch(`https://91e2nq3dy2.execute-api.us-east-2.amazonaws.com/dev/fast?topic=${encodeURIComponent(topic)}`);
-            const data = await response.json();
-            localStorage.setItem('apiData', JSON.stringify(data));
-            console.log("API Data stored: ", data);
-        } catch (error) {
-            console.error("Error fetching or storing API data: ", error);
         }
     };
 
@@ -171,7 +154,7 @@ const Page = () => {
             )}
             <div className='mt-8 flex flex-wrap gap-4 w-full max-w-3xl justify-center'>
                 <div onClick={() => { }} className='bg-gray-500 text-xs cursor-pointer px-4 py-2 rounded-md'>
-                    <p>2024 Smart Home IOT devices market in US </p>
+                    <p>2024 Smart Home IOT devices market in US</p>
                 </div>
                 <div onClick={() => { }} className='bg-gray-500 text-xs cursor-pointer px-4 py-2 rounded-md'>
                     <p>Germany&apos;s Beer Industry</p>

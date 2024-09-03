@@ -1,15 +1,15 @@
 'use client'
 import Loader from '@/components/loader';
 import Sidebar from '@/components/sidebar';
+import React, { useEffect, useState, useRef } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
-import React, { useEffect, useState } from 'react';
 import { LuUser } from "react-icons/lu";
-import { Input, Spinner } from '@nextui-org/react';
+import { Spinner } from '@nextui-org/react';
 import ApiData from '@/components/apiData';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import app from '@/config';
-import { FaArrowRight } from 'react-icons/fa';
+import AWS from 'aws-sdk';
 
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -21,6 +21,7 @@ const Page = () => {
     const [inputValue, setInputValue] = useState('');
     const [submittedTexts, setSubmittedTexts] = useState([]); 
     const router = useRouter();
+    const intervalRef = useRef();
 
     const checkScreenSize = () => {
         if (window.innerWidth <= 768) {
@@ -48,24 +49,6 @@ const Page = () => {
     ];
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setShowApiData(true);
-        }, 4000);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    useEffect(() => {
-        if (!showApiData) {
-            const messageTimer = setInterval(() => {
-                setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % reportResponse.length);
-            }, 3000);
-
-            return () => clearInterval(messageTimer);
-        }
-    }, [showApiData, reportResponse.length]);
-
-    useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setUser(user);
@@ -78,6 +61,9 @@ const Page = () => {
         const storedText = localStorage.getItem('searchText');
         if (storedText) {
             setSavedText(storedText);
+        }
+        if (storedText) {
+             fetchAndStoreApiData(storedText);
         }
     }, []);
 
@@ -95,11 +81,36 @@ const Page = () => {
 
     const fetchAndStoreApiData = async (topic) => {
         try {
-            const response = await fetch(`https://91e2nq3dy2.execute-api.us-east-2.amazonaws.com/dev/fast?topic=${encodeURIComponent(topic)}`);
-            const data = await response.json();
+            const lambda = new AWS.Lambda({
+                region: 'us-west-2',
+                accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY
+            });
+
+            const params = {
+                FunctionName: 'arn:aws:lambda:us-west-2:986519088348:function:trychai-api',
+                InvocationType: 'RequestResponse',
+                Payload: JSON.stringify({ test: topic })
+            };
+
+            // Start showing the progress messages while waiting for the response
+            intervalRef.current = setInterval(() => {
+                setCurrentMessageIndex(prev => (prev + 1) % reportResponse.length);
+            }, 60000);
+
+            console.log("Invoking Lambda Function");
+            const response = await lambda.invoke(params).promise();
+            const data = JSON.parse(response.Payload);
+            console.log("Lambda Function Response: ", data);
+
+            clearInterval(intervalRef.current);
+
             localStorage.setItem('apiData', JSON.stringify(data));
             console.log("API Data stored: ", data);
+
+            setShowApiData(true);
         } catch (error) {
+            clearInterval(intervalRef.current);
             console.error("Error fetching or storing API data: ", error);
         }
     };
@@ -128,7 +139,9 @@ const Page = () => {
                         {!showApiData ? <Spinner color='default' /> : ""}
                         <p className='text-2xl font-semibold text-white'>{savedText}</p>
                     </div>
-                    <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
+                    <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
+                        {!showApiData ? reportResponse[currentMessageIndex] : ""}
+                    </p>
                     {!showApiData ? <Loader /> : <ApiData />}
 
                     {submittedTexts.map((text, index) => (
@@ -137,7 +150,9 @@ const Page = () => {
                                 {!showApiData ? <Spinner color='default' /> : ""}
                                 <p className='text-2xl font-semibold text-white'>{text}</p>
                             </div>
-                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
+                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
+                                {!showApiData ? reportResponse[currentMessageIndex] : ""}
+                            </p>
                             {!showApiData ? <Loader /> : <ApiData />}
                         </div>
                     ))}

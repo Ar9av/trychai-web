@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nextui-org/react": "^2.2.9",
+    "aws-sdk": "^2.1687.0",
     "axios": "^1.7.3",
     "cors": "^2.8.5",
     "firebase": "^10.12.5",

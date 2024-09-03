@@ -16,8 +16,16 @@ const ApiData = () => {
     const addDataToFirestore = async () => {
       try {
         const keyResponse = JSON.parse(localStorage.getItem('apiData')) || [];
+        let dataToStore;
+        if (keyResponse.body && keyResponse.body.summary) {
+          dataToStore = keyResponse.body.summary;
+        } else if (keyResponse.body) {
+          dataToStore = keyResponse.body;
+        } else {
+          dataToStore = keyResponse;
+        }
         const docRef = await addDoc(collection(db, "searchData"), {
-          keyResponse: keyResponse.summary
+          keyResponse: dataToStore
         });
         console.log("Document written with ID: ", docRef.id);
       } catch (e) {
