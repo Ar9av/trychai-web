@@ -1,25 +1,28 @@
+//search/page.jsx
 'use client'
 import Loader from '@/components/loader';
 import Sidebar from '@/components/sidebar';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
 import { LuUser } from "react-icons/lu";
 import { Spinner } from '@nextui-org/react';
 import ApiData from '@/components/apiData';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import app from '@/config';
+import app, { db } from '@/config';
 import AWS from 'aws-sdk';
+import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [showApiData, setShowApiData] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+    const [apiData, setApiData] = useState(null);
     const auth = getAuth(app);
     const [user, setUser] = useState(null);
     const [savedText, setSavedText] = useState('');
     const [inputValue, setInputValue] = useState('');
-    const [submittedTexts, setSubmittedTexts] = useState([]); 
+    const [submittedTexts, setSubmittedTexts] = useState([]);
     const router = useRouter();
     const intervalRef = useRef();
 
@@ -32,7 +35,6 @@ const Page = () => {
     useEffect(() => {
         checkScreenSize();
         window.addEventListener('resize', checkScreenSize);
-
         return () => {
             window.removeEventListener('resize', checkScreenSize);
         };
@@ -53,17 +55,15 @@ const Page = () => {
             if (user) {
                 setUser(user);
             }
-        })
+        });
         return () => unsubscribe();
-    }, [auth])
+    }, [auth]);
 
     useEffect(() => {
         const storedText = localStorage.getItem('searchText');
         if (storedText) {
             setSavedText(storedText);
-        }
-        if (storedText) {
-             fetchAndStoreApiData(storedText);
+            fetchApiData(storedText);
         }
     }, []);
 
@@ -73,47 +73,80 @@ const Page = () => {
 
     const handleKeyPress = async (e) => {
         if (e.key === 'Enter' && inputValue.trim() !== '') {
-            await fetchAndStoreApiData(inputValue);
+            await fetchApiData(inputValue);
             setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]);
             setInputValue('');
         }
     };
 
-    const fetchAndStoreApiData = async (topic) => {
-        try {
+    const fetchApiData = useCallback(async (topic) => {
+        // const fetchFromFirestore = async () => {
+        //     try {
+        //         const q = query(collection(db, 'searchData'), where('topic', '==', topic));
+        //         const querySnapshot = await getDocs(q);
+        //         if (!querySnapshot.empty) {
+        //             let docData;
+        //             querySnapshot.forEach((doc) => {
+        //                 docData = doc.data();
+        //             });
+        //             return docData;
+        //         }
+        //     } catch (error) {
+        //         console.error('Error fetching document: ', error);
+        //     }
+        //     return null;
+        // };
+
+        const fetchFromLambda = async () => {
+            console.log("Lambda invoked");
             const lambda = new AWS.Lambda({
                 region: 'us-west-2',
                 accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY
+                secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
             });
 
             const params = {
                 FunctionName: 'arn:aws:lambda:us-west-2:986519088348:function:trychai-api',
                 InvocationType: 'RequestResponse',
-                Payload: JSON.stringify({ test: topic })
+                Payload: JSON.stringify({ "topic": topic }),
             };
 
-            // Start showing the progress messages while waiting for the response
             intervalRef.current = setInterval(() => {
-                setCurrentMessageIndex(prev => (prev + 1) % reportResponse.length);
+                setCurrentMessageIndex((prev) => (prev + 1) % reportResponse.length);
             }, 60000);
 
-            console.log("Invoking Lambda Function");
-            const response = await lambda.invoke(params).promise();
-            const data = JSON.parse(response.Payload);
-            console.log("Lambda Function Response: ", data);
+            try {
+                const response = await lambda.invoke(params).promise();
 
-            clearInterval(intervalRef.current);
+                clearInterval(intervalRef.current);
 
-            localStorage.setItem('apiData', JSON.stringify(data));
-            console.log("API Data stored: ", data);
+                const data = JSON.parse(response.Payload);
+                console.log(data)
+                // await setDoc(doc(db, 'searchData', topic), {
+                //     topic,
+                //     keyResponse: data,
+                // });
 
+                return data;
+            } catch (error) {
+                clearInterval(intervalRef.current);
+                console.error('Error fetching or storing API data: ', error);
+            }
+            return null;
+        };
+
+        setShowApiData(false);
+        let data = await fetchFromLambda();
+        // let data = await fetchFromFirestore();
+        // if (!data) {
+        //     data = await fetchFromLambda();
+        // }
+        if (data) {
+            setApiData(data);
             setShowApiData(true);
-        } catch (error) {
-            clearInterval(intervalRef.current);
-            console.error("Error fetching or storing API data: ", error);
+            localStorage.setItem('apiData', JSON.stringify(data));
         }
-    };
+    }, [reportResponse]);
 
     return (
         <div className="relative min-h-screen bg-black flex">
@@ -142,7 +175,7 @@ const Page = () => {
                     <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
                         {!showApiData ? reportResponse[currentMessageIndex] : ""}
                     </p>
-                    {!showApiData ? <Loader /> : <ApiData />}
+                    {!showApiData ? <Loader /> : <ApiData apiData={apiData} />}
 
                     {submittedTexts.map((text, index) => (
                         <div key={index}>
@@ -151,18 +184,19 @@ const Page = () => {
                                 <p className='text-2xl font-semibold text-white'>{text}</p>
                             </div>
                             <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
+                                {!showApiData ? "This might take 3-4 mins to process.." : ""}
+                            </p>
+                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
                                 {!showApiData ? reportResponse[currentMessageIndex] : ""}
                             </p>
-                            {!showApiData ? <Loader /> : <ApiData />}
+                            {!showApiData ? <Loader /> : <ApiData apiData={apiData} />}
                         </div>
                     ))}
                 </div>
                 <div className="relative flex justify-center w-full mt-4">
                     <input
                         className='fixed bottom-3 w-[40%] max-w-lg bg-[#1e1e1e] text-white p-2 rounded-full pl-4 pr-10 outline-none'
-                        style={{
-                            border: '1px solid #7083cf',
-                        }}
+                        style={{ border: '1px solid #7083cf' }}
                         placeholder="Ask a follow-up question..."
                         value={inputValue}
                         onChange={handleInputChange}
