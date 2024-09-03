@@ -14,7 +14,7 @@ import AWS from 'aws-sdk';
 import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 
 const Page = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showApiData, setShowApiData] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [apiData, setApiData] = useState(null);
