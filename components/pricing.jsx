@@ -19,7 +19,7 @@ export default function Pricing() {
     {
       name: "Basic Plan",
       desc: "Advanced options and customizability for your reports",
-      price: 3,
+      price: 10,
       isMostPop: true,
       features: [
         "Generate reports with advanced options",
@@ -31,7 +31,7 @@ export default function Pricing() {
     {
       name: "Enterprise Plan",
       desc: "Unlimited access and advanced features for your team",
-      price: 20,
+      price: "🤔",
       isMostPop: false,
       features: [
         "API access",

@@ -193,7 +193,7 @@ const Page = () => {
                         </div>
                     ))}
                 </div>
-                <div className="relative flex justify-center w-full mt-4">
+                {/* <div className="relative flex justify-center w-full mt-4">
                     <input
                         className='fixed bottom-3 w-[40%] max-w-lg bg-[#1e1e1e] text-white p-2 rounded-full pl-4 pr-10 outline-none'
                         style={{ border: '1px solid #7083cf' }}
@@ -202,7 +202,7 @@ const Page = () => {
                         onChange={handleInputChange}
                         onKeyPress={handleKeyPress}
                     />
-                </div>
+                </div> */}
             </div>
         </div>
     );

@@ -9,10 +9,10 @@ export default function Partners() {
 
   // Function to calculate the new number based on the current time
   const calculateNewNumber = () => {
-    const startDate = new Date('2024-08-04T00:00:00Z'); // Start date at midnight UTC
+    const startDate = new Date('2024-09-04T00:00:00Z'); // Start date at midnight UTC
     const now = new Date(); // Current date and time
-    const diffInHours = Math.floor((now - startDate) / (1000 * 60 * 60)); // Difference in hours
-    const newNumber = 420 + (diffInHours * 2); // Calculate new number
+    const diffInDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24)); // Difference in days
+    const newNumber = 420 + (diffInDays * 10); // Calculate new number (48 = 2 * 24 hours)
     setDynamicNumber(newNumber);
   };
 
