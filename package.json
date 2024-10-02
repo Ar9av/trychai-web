@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^5.6.4",
     "@nextui-org/react": "^2.2.9",
     "aws-sdk": "^2.1687.0",
     "axios": "^1.7.3",
+    "clerk": "^0.8.3",
     "cors": "^2.8.5",
     "firebase": "^10.12.5",
     "framer-motion": "^10.16.12",

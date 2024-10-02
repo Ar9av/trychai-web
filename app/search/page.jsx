@@ -1,4 +1,3 @@
-//search/page.jsx
 'use client'
 import Loader from '@/components/loader';
 import Sidebar from '@/components/sidebar';
@@ -7,24 +6,23 @@ import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
 import { LuUser } from "react-icons/lu";
 import { Spinner } from '@nextui-org/react';
 import ApiData from '@/components/apiData';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import app, { db } from '@/config';
 import AWS from 'aws-sdk';
 import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
+import { useClerk } from "@clerk/nextjs";
 
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showApiData, setShowApiData] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [apiData, setApiData] = useState(null);
-    const auth = getAuth(app);
     const [user, setUser] = useState(null);
-    const [savedText, setSavedText] = useState('');
+    const [searchParams, setSearchParams] = useState({ topic: '', outline: '', sources: '' });
     const [inputValue, setInputValue] = useState('');
     const [submittedTexts, setSubmittedTexts] = useState([]);
     const router = useRouter();
     const intervalRef = useRef();
+    const { session } = useClerk();
 
     const checkScreenSize = () => {
         if (window.innerWidth <= 768) {
@@ -50,53 +48,20 @@ const Page = () => {
         "Searching the Internet for sources and relevant content..."
     ];
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUser(user);
-            }
-        });
-        return () => unsubscribe();
-    }, [auth]);
-
-    useEffect(() => {
-        const storedText = localStorage.getItem('searchText');
-        if (storedText) {
-            setSavedText(storedText);
-            fetchApiData(storedText);
-        }
-    }, []);
-
     const handleInputChange = (e) => {
         setInputValue(e.target.value);
     };
 
     const handleKeyPress = async (e) => {
         if (e.key === 'Enter' && inputValue.trim() !== '') {
-            await fetchApiData(inputValue);
+            const newParams = { topic: inputValue, outline: searchParams.outline, sources: searchParams.sources };
+            await fetchApiData(newParams);
             setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]);
             setInputValue('');
         }
     };
 
-    const fetchApiData = useCallback(async (topic) => {
-        // const fetchFromFirestore = async () => {
-        //     try {
-        //         const q = query(collection(db, 'searchData'), where('topic', '==', topic));
-        //         const querySnapshot = await getDocs(q);
-        //         if (!querySnapshot.empty) {
-        //             let docData;
-        //             querySnapshot.forEach((doc) => {
-        //                 docData = doc.data();
-        //             });
-        //             return docData;
-        //         }
-        //     } catch (error) {
-        //         console.error('Error fetching document: ', error);
-        //     }
-        //     return null;
-        // };
-
+    const fetchApiData = useCallback(async (params) => {
         const fetchFromLambda = async () => {
             console.log("Lambda invoked");
             const lambda = new AWS.Lambda({
@@ -104,11 +69,11 @@ const Page = () => {
                 accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
             });
-
-            const params = {
+            console.log(JSON.stringify(params))
+            const lambdaParams = {
                 FunctionName: 'arn:aws:lambda:us-west-2:986519088348:function:trychai-api',
                 InvocationType: 'RequestResponse',
-                Payload: JSON.stringify({ "topic": topic }),
+                Payload: JSON.stringify(params),
             };
 
             intervalRef.current = setInterval(() => {
@@ -116,14 +81,14 @@ const Page = () => {
             }, 60000);
 
             try {
-                const response = await lambda.invoke(params).promise();
+                const response = await lambda.invoke(lambdaParams).promise();
 
                 clearInterval(intervalRef.current);
 
                 const data = JSON.parse(response.Payload);
                 console.log(data)
-                // await setDoc(doc(db, 'searchData', topic), {
-                //     topic,
+                // await setDoc(doc(db, 'searchData', params.topic), {
+                //     ...params,
                 //     keyResponse: data,
                 // });
 
@@ -170,7 +135,7 @@ const Page = () => {
                 <div className='w-full px-4'>
                     <div className='flex gap-5 items-center'>
                         {!showApiData ? <Spinner color='default' /> : ""}
-                        <p className='text-2xl font-semibold text-white'>{savedText}</p>
+                        <p className='text-2xl font-semibold text-white'>{searchParams.topic}</p>
                     </div>
                     <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
                         {!showApiData ? reportResponse[currentMessageIndex] : ""}
@@ -193,16 +158,7 @@ const Page = () => {
                         </div>
                     ))}
                 </div>
-                {/* <div className="relative flex justify-center w-full mt-4">
-                    <input
-                        className='fixed bottom-3 w-[40%] max-w-lg bg-[#1e1e1e] text-white p-2 rounded-full pl-4 pr-10 outline-none'
-                        style={{ border: '1px solid #7083cf' }}
-                        placeholder="Ask a follow-up question..."
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        onKeyPress={handleKeyPress}
-                    />
-                </div> */}
+
             </div>
         </div>
     );
