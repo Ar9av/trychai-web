@@ -1,24 +1,35 @@
-'use client';
+// app/chatBox/page.jsx
+"use client"
 import Sidebar from '@/components/sidebar';
 import React, { useEffect, useState } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
 import { Textarea, Switch } from '@nextui-org/react';
 import { FaArrowRight } from 'react-icons/fa';
-import Link from 'next/link';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import app from '@/config';
 import NavBar from '@/components/navbar';
+import { useClerk } from "@clerk/nextjs";
 
 const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAdvancedOptionsOn, setIsAdvancedOptionsOn] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const auth = getAuth(app);
+  const [outline, setOutline] = useState('');
+  const [sources, setSources] = useState('');
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const { session } = useClerk();
+
+  // Logging user information
+  useEffect(() => {
+    const logUserInfo = async () => {
+      if (session) {
+        const user = session.user.emailAddresses[0].emailAddress;
+        console.log("User information:", user);
+      }
+    };
+    logUserInfo();
+  }, [session]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -28,19 +39,8 @@ const Page = () => {
     setIsAdvancedOptionsOn(!isAdvancedOptionsOn);
   };
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-    return () => unsubscribe();
-  }, [auth]);
-
   const handleSearchClick = async () => {
-    if (!user) {
+    if (!session) {
       toast.error("Please log in to continue");
     } else {
       const currentSearch = searchText.trim();
@@ -49,7 +49,9 @@ const Page = () => {
         history.push(currentSearch);
         localStorage.setItem('searchHistory', JSON.stringify(history));
       }
-      localStorage.setItem('searchText', currentSearch);
+      const searchParams = JSON.stringify({ topic: searchText, outline, sources });
+      localStorage.setItem('searchParams', searchParams);
+
       router.push("/search");
     }
   };
@@ -81,7 +83,8 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      <NavBar />
+      <NavBar showNewReport={false} />
+
       <div className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar}></div>
         <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
@@ -118,28 +121,23 @@ const Page = () => {
         </div>
         {isAdvancedOptionsOn && (
           <div className='mt-8 flex flex-col gap-6 w-full max-w-3xl'>
-            {/* <div className='w-full sm:w-[70%] flex flex-col sm:flex-row gap-6'>
-              <p className="sm:w-1/4">Persona</p>
+            <div className="w-full sm:w-1/2">
+              <p>Outline</p>
               <Textarea
-                placeholder="Persona for which the report needs to be generated..."
-                className="w-full border-5 rounded-lg border-[#7083cf]"
+                value={outline}
+                onChange={e => setOutline(e.target.value)}
+                placeholder="Create a report Outline to fit in the way your report needs to be generated..."
+                className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
               />
-            </div> */}
-            <div className='flex flex-col sm:flex-row justify-between w-full gap-6'>
-              <div className="w-full sm:w-1/2">
-                <p>Outline</p>
-                <Textarea
-                  placeholder="Create a report Outline to fit in the way your report needs to be generated..."
-                  className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
-                />
-              </div>
-              <div className="w-full sm:w-1/2">
-                <p>Sources</p>
-                <Textarea
-                  placeholder="Enter the sources/links in new lines..."
-                  className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
-                />
-              </div>
+            </div>
+            <div className="w-full sm:w-1/2">
+              <p>Sources</p>
+              <Textarea
+                value={sources}
+                onChange={e => setSources(e.target.value)}
+                placeholder="Enter the sources/links in new lines..."
+                className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
+              />
             </div>
           </div>
         )}

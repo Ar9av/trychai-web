@@ -10,59 +10,17 @@ import {
 } from "@nextui-org/navbar";
 import { Link } from "@nextui-org/link";
 import { Button } from "@nextui-org/button";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@nextui-org/dropdown";
-import {
-  AppWindow,
-  ChevronDown,
-  Contact2,
-  TimerReset,
-  User2,
-  Webhook,
-} from "lucide-react";
 import React, { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
-import app from '@/config';
+import {
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 
-export default function NavBar() {
+
+export default function NavBar({ showNewReport = false }) { // Added parameter
   const menuItems = ["docs", "features", "pricing", "blog"];
-  const auth = getAuth(app);
-  const router = useRouter();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-    return () => unsubscribe();
-  }, [auth]);
-
-  const handleSignInClick = () => {
-    if (!user) {
-      router.push('/login');
-    } else {
-      handleLogout();
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.push('/');
-    } catch (error) {
-      console.log("Error SignOut", error.message);
-    }
-  };
-
   return (
     <Navbar isBlurred maxWidth="xl">
       <NavbarContent className="sm:hidden" justify="start">
@@ -81,19 +39,43 @@ export default function NavBar() {
             TrychAI
           </Link>
         </NavbarBrand>
-        {/* {menuItems.map((item, index) => (
-          <NavbarItem key={index}>
-            <Link href={`#${item}`} className="text-inherit">
-              {item}
-            </Link>
-          </NavbarItem>
-        ))} */}
       </NavbarContent>
       <NavbarContent justify="end">
-        <NavbarItem>
-          <Button color="primary" variant="flat" onClick={handleSignInClick}>
-            {user ? user.displayName : "Sign In"}
-          </Button>
+      <NavbarItem className="hidden sm:flex items-center gap-2">
+          <SignedOut>
+            <Button
+              as={Link}
+              color="primary"
+              href="/sign-in"
+              variant="solid"
+              className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+            >
+              Sign In
+            </Button>
+            <Button
+              as={Link}
+              color="primary"
+              href="/sign-up"
+              variant="solid"
+              className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+            >
+              Sign Up
+            </Button>
+          </SignedOut>
+          <SignedIn>
+            {showNewReport && ( // Conditional rendering based on the parameter
+              <Button
+                as={Link}
+                color="primary"
+                href="/chatBox"
+                variant="solid"
+                className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+              >
+                New Report
+              </Button>
+            )}
+            <UserButton className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-md p-2" />
+          </SignedIn>
         </NavbarItem>
       </NavbarContent>
       <NavbarMenu>

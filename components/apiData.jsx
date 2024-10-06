@@ -27,7 +27,7 @@ const ApiData = ({ apiData }) => {
 
   return (
     <div className='relative flex w-full' style={{ height: '100vh' }}>
-      <div className={`transition-all duration-500 ${isCollapsed ? 'w-full' : 'w-[70%]'} overflow-y-auto h-full p-4`}>
+      <div className={`transition-all duration-500 'w-full' overflow-y-auto h-full p-4`}>
         <ReactMarkdown
           className='markdown-body'
           remarkPlugins={[remarkGfm]}
@@ -44,11 +44,11 @@ const ApiData = ({ apiData }) => {
         </ReactMarkdown>
       </div>
 
-      <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
+      {/* <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
         {!isCollapsed && apiData.sources && <Sources data={apiData.sources} />}
-      </div>
+      </div> */}
 
-      <button
+      {/* <button
         onClick={toggleCollapse}
         className='absolute top-1/2 transform -translate-y-1/2 right-0 p-2 bg-blue-500 text-white rounded-l flex items-center justify-center'>
         <svg
@@ -62,7 +62,7 @@ const ApiData = ({ apiData }) => {
                 strokeWidth={2}
                 d={isCollapsed ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
         </svg>
-      </button>
+      </button> */}
     </div>
   );
 };
