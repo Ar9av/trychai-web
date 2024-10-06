@@ -14,7 +14,7 @@ import NavBar from '@/components/navbar';
 import { toast } from 'react-toastify';
 
 const Page = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(localStorage.getItem('isSidebarOpen') === 'true');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [showApiData, setShowApiData] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [apiData, setApiData] = useState(null);
