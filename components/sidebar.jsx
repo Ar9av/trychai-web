@@ -7,12 +7,14 @@ import { Button } from '@nextui-org/react';
 import { BiChat } from "react-icons/bi";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useClerk } from '@clerk/clerk-react'; // Make sure to have @clerk/clerk-react installed
+import { useClerk } from '@clerk/clerk-react';
+import { usePathname } from 'next/navigation'
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [previousReports, setPreviousReports] = useState([]);
   const router = useRouter();
   const { session } = useClerk();
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchHashes = async () => {
@@ -21,7 +23,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         try {
           const response = await fetch(`/api/getUserHashes?email=${encodeURIComponent(user_email)}`);
           const data = await response.json();
-          setPreviousReports(data); // Save the fetched data
+          setPreviousReports(data);
         } catch (error) {
           console.error('Failed to fetch data:', error);
         }
@@ -32,8 +34,14 @@ const Sidebar = ({ isOpen, onClose }) => {
   }, [session]);
 
   const handleHistoryClick = (text) => {
-    localStorage.setItem('searchText', text);
-    router.push('/search');
+    console.log(text);
+    localStorage.setItem('searchParams', text);
+    if (pathname === '/search') {
+      console.log("reloading");
+      window.location.reload();
+    } else {
+      router.push('/search');
+    }
   };
 
   const formatTimestamp = (timestamp) => {
@@ -85,18 +93,18 @@ const Sidebar = ({ isOpen, onClose }) => {
           <div
             key={index}
             className='mt-2 mx-2 px-4 py-3 rounded-md bg-[#27282A] cursor-pointer hover:bg-[#323335] transition-colors duration-200'
-            onClick={() => handleHistoryClick(item.title)}
-            title={item.title}  // Tooltip to show the full title
+            onClick={() => handleHistoryClick(item.payload)}
+            title={item.title}
           >
             <p className='text-sm truncate'>{item.title}</p>
             <p className='text-xs text-gray-400'>{formatTimestamp(item.created_at)}</p>
           </div>
         ))}
       </div>
-      <div className='absolute bottom-5 left-0 right-0 flex items-center justify-start px-4 py-2 bg-[#1c1c1e]'>
+      {/* <div className='absolute bottom-5 left-0 right-0 flex items-center justify-start px-4 py-2 bg-[#1c1c1e]'>
         <LuUser size={24} className="mr-4" />
         <h1 className="text-sm font-medium">Report History</h1>
-      </div>
+      </div> */}
     </div>
   );
 };

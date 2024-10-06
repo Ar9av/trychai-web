@@ -14,7 +14,7 @@ import NavBar from '@/components/navbar';
 import { toast } from 'react-toastify';
 
 const Page = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(localStorage.getItem('isSidebarOpen') === 'true');
     const [showApiData, setShowApiData] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [apiData, setApiData] = useState(null);
@@ -49,13 +49,23 @@ const Page = () => {
     }, [router]);
 
     useEffect(() => {
+        const storedSidebarState = localStorage.getItem('isSidebarOpen');
+        if (storedSidebarState !== null) {
+            setIsSidebarOpen(JSON.parse(storedSidebarState));
+        }
+
         if (searchParams.topic) {
             fetchApiData(searchParams);
         }
     }, [searchParams]);
 
+    useEffect(() => {
+        localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
+    }, [isSidebarOpen]);
+
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
+        localStorage.setItem('isSidebarOpen', JSON.stringify(!isSidebarOpen));
     };
 
     const reportResponse = [
@@ -90,10 +100,6 @@ const Page = () => {
 
                 const data = JSON.parse(response.Payload);
                 console.log(data)
-                // await setDoc(doc(db, 'searchData', params.topic), {
-                //     ...params,
-                //     keyResponse: data,
-                // });
 
                 return data;
             } catch (error) {
@@ -106,10 +112,6 @@ const Page = () => {
 
         setShowApiData(false);
         let data = await fetchFromLambda();
-        // let data = await fetchFromFirestore();
-        // if (!data) {
-        //     data = await fetchFromLambda();
-        // }
         if (data) {
             setApiData(data);
             setShowApiData(true);

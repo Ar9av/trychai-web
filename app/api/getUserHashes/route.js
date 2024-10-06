@@ -11,7 +11,7 @@ export async function GET(req) {
 
   try {
     const query = `
-      SELECT dtv2.title, ud.created_at, dtv2.md5_hash
+      SELECT dtv2.title, ud.created_at, dtv2.payload
       FROM user_data ud
       JOIN data_table_v2 dtv2 ON ud.md5_hash = dtv2.md5_hash
       WHERE ud.user_email = $1 order by ud.created_at desc;

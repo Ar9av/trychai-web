@@ -27,7 +27,7 @@ const ApiData = ({ apiData }) => {
 
   return (
     <div className='relative flex w-full' style={{ height: '100vh' }}>
-      <div className={`transition-all duration-500 ${isCollapsed ? 'w-full' : 'w-[70%]'} overflow-y-auto h-full p-4`}>
+      <div className={`transition-all duration-500 'w-full' overflow-y-auto h-full p-4`}>
         <ReactMarkdown
           className='markdown-body'
           remarkPlugins={[remarkGfm]}
