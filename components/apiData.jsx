@@ -44,9 +44,9 @@ const ApiData = ({ apiData }) => {
         </ReactMarkdown>
       </div>
 
-      <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
+      {/* <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
         {!isCollapsed && apiData.sources && <Sources data={apiData.sources} />}
-      </div>
+      </div> */}
 
       <button
         onClick={toggleCollapse}

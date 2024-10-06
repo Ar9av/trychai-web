@@ -1,3 +1,4 @@
+//app/search/page.jsx
 'use client'
 import Loader from '@/components/loader';
 import Sidebar from '@/components/sidebar';
@@ -10,17 +11,15 @@ import { useRouter } from 'next/navigation';
 import AWS from 'aws-sdk';
 import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 import { useClerk } from "@clerk/nextjs";
-
+import NavBar from '@/components/navbar';
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showApiData, setShowApiData] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [apiData, setApiData] = useState(null);
-    const [user, setUser] = useState(null);
     const [searchParams, setSearchParams] = useState({ topic: '', outline: '', sources: '' });
     const [inputValue, setInputValue] = useState('');
     const [submittedTexts, setSubmittedTexts] = useState([]);
-    const router = useRouter();
     const intervalRef = useRef();
     const { session } = useClerk();
 
@@ -123,13 +122,7 @@ const Page = () => {
                 {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
             </button>
             <div className={`flex flex-col items-center flex-grow transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-8'}`}>
-                <div className="w-full flex justify-between p-4">
-                    <h1 className="text-2xl font-semibold tracking-wide text-white">TrychAI</h1>
-                    <div className="flex gap-2 items-center text-white">
-                        <LuUser size={25} />
-                        <p>{user ? user.displayName : "SignIn"}</p>
-                    </div>
-                </div>
+                <NavBar />
                 <div className="border-2 w-3/4 border-blue-950 my-6"></div>
 
                 <div className='w-full px-4'>

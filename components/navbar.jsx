@@ -19,7 +19,7 @@ import {
 } from "@clerk/nextjs";
 
 
-export default function NavBar() {
+export default function NavBar({ showNewReport = false }) { // Added parameter
   const menuItems = ["docs", "features", "pricing", "blog"];
   return (
     <Navbar isBlurred maxWidth="xl">
@@ -63,15 +63,17 @@ export default function NavBar() {
             </Button>
           </SignedOut>
           <SignedIn>
-            <Button
-              as={Link}
-              color="primary"
-              href="/chatBox"
-              variant="solid"
-              className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-            >
-              Go to Dashboard
-            </Button>
+            {showNewReport && ( // Conditional rendering based on the parameter
+              <Button
+                as={Link}
+                color="primary"
+                href="/chatBox"
+                variant="solid"
+                className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+              >
+                New Report
+              </Button>
+            )}
             <UserButton className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-md p-2" />
           </SignedIn>
         </NavbarItem>
