@@ -48,7 +48,7 @@ const ApiData = ({ apiData }) => {
         {!isCollapsed && apiData.sources && <Sources data={apiData.sources} />}
       </div> */}
 
-      <button
+      {/* <button
         onClick={toggleCollapse}
         className='absolute top-1/2 transform -translate-y-1/2 right-0 p-2 bg-blue-500 text-white rounded-l flex items-center justify-center'>
         <svg
@@ -62,7 +62,7 @@ const ApiData = ({ apiData }) => {
                 strokeWidth={2}
                 d={isCollapsed ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
         </svg>
-      </button>
+      </button> */}
     </div>
   );
 };

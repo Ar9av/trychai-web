@@ -1,4 +1,3 @@
-//app/search/page.jsx
 'use client'
 import Loader from '@/components/loader';
 import Sidebar from '@/components/sidebar';
@@ -12,6 +11,8 @@ import AWS from 'aws-sdk';
 import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 import { useClerk } from "@clerk/nextjs";
 import NavBar from '@/components/navbar';
+import { toast } from 'react-toastify';
+
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showApiData, setShowApiData] = useState(false);
@@ -22,6 +23,7 @@ const Page = () => {
     const [submittedTexts, setSubmittedTexts] = useState([]);
     const intervalRef = useRef();
     const { session } = useClerk();
+    const router = useRouter();
 
     const checkScreenSize = () => {
         if (window.innerWidth <= 768) {
@@ -37,6 +39,21 @@ const Page = () => {
         };
     }, []);
 
+    useEffect(() => {
+        const storedParams = localStorage.getItem('searchParams');
+        if (storedParams) {
+            setSearchParams(JSON.parse(storedParams));
+        } else {
+            router.push('/');
+        }
+    }, [router]);
+
+    useEffect(() => {
+        if (searchParams.topic) {
+            fetchApiData(searchParams);
+        }
+    }, [searchParams]);
+
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
@@ -46,19 +63,6 @@ const Page = () => {
         "Creating Outline for the report...",
         "Searching the Internet for sources and relevant content..."
     ];
-
-    const handleInputChange = (e) => {
-        setInputValue(e.target.value);
-    };
-
-    const handleKeyPress = async (e) => {
-        if (e.key === 'Enter' && inputValue.trim() !== '') {
-            const newParams = { topic: inputValue, outline: searchParams.outline, sources: searchParams.sources };
-            await fetchApiData(newParams);
-            setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]);
-            setInputValue('');
-        }
-    };
 
     const fetchApiData = useCallback(async (params) => {
         const fetchFromLambda = async () => {
@@ -95,6 +99,7 @@ const Page = () => {
             } catch (error) {
                 clearInterval(intervalRef.current);
                 console.error('Error fetching or storing API data: ', error);
+                toast.error('Error fetching report data. Please try again.');
             }
             return null;
         };
@@ -111,6 +116,19 @@ const Page = () => {
             localStorage.setItem('apiData', JSON.stringify(data));
         }
     }, [reportResponse]);
+
+    const handleInputChange = (e) => {
+        setInputValue(e.target.value);
+    };
+
+    const handleKeyPress = async (e) => {
+        if (e.key === 'Enter' && inputValue.trim() !== '') {
+            const newParams = { topic: inputValue, outline: searchParams.outline, sources: searchParams.sources };
+            await fetchApiData(newParams);
+            setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]);
+            setInputValue('');
+        }
+    };
 
     return (
         <div className="relative min-h-screen bg-black flex">
@@ -151,7 +169,6 @@ const Page = () => {
                         </div>
                     ))}
                 </div>
-
             </div>
         </div>
     );
