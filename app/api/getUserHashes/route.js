@@ -6,25 +6,15 @@ const pool = new Pool({
 });
 
 export async function GET(req) {
-  const url = new URL(req.url);
-  const email = url.searchParams.get('email');
-
   try {
-    // const query = `
-    //   SELECT dtv2.title, ud.created_at, dtv2.payload
-    //   FROM user_data ud
-    //   JOIN data_table_v2 dtv2 ON ud.md5_hash = dtv2.md5_hash
-    //   WHERE ud.user_email = $1 order by ud.created_at desc;
-    // `;
     const query = `
       SELECT dtv2.title, ud.created_at, dtv2.payload
       FROM user_data ud
-      JOIN data_table_v2 dtv2 ON ud.md5_hash = dtv2.md5_hash order by ud.created_at desc;
+      JOIN data_table_v2 dtv2 ON ud.md5_hash = dtv2.md5_hash
+      order by ud.created_at desc;
     `;
 
-
-    const values = [email];
-    const result = await pool.query(query, values);
+    const result = await pool.query(query);
     const data = result.rows;
 
     return NextResponse.json(data);

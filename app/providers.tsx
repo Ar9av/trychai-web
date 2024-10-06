@@ -14,10 +14,11 @@ export interface ProvidersProps {
 
 export function Providers({ children, themeProps }: ProvidersProps) {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  console.log(publishableKey); // Log the publishableKey to the console
   return (
     <NextUIProvider>
       <NextThemesProvider defaultTheme="dark" attribute="class" {...themeProps}>
-        <ClerkProvider publishableKey={publishableKey}>
+        <ClerkProvider afterSignOutUrl="/" publishableKey={publishableKey}>
             {children}
         </ClerkProvider>
       </NextThemesProvider>
