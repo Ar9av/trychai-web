@@ -7,21 +7,55 @@ import { Button } from '@nextui-org/react';
 import { BiChat } from "react-icons/bi";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-
+import { useClerk } from '@clerk/clerk-react'; // Make sure to have @clerk/clerk-react installed
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [previousReports, setPreviousReports] = useState([]);
   const router = useRouter();
+  const { session } = useClerk();
 
   useEffect(() => {
-    const storedReports = JSON.parse(localStorage.getItem('searchHistory')) || [];
-    setPreviousReports(storedReports);
-  }, []);
+    const fetchHashes = async () => {
+      if (session) {
+        const user_email = session.user.emailAddresses[0].emailAddress;
+        try {
+          const response = await fetch(`/api/getUserHashes?email=${encodeURIComponent(user_email)}`);
+          const data = await response.json();
+          setPreviousReports(data); // Save the fetched data
+        } catch (error) {
+          console.error('Failed to fetch data:', error);
+        }
+      }
+    };
+
+    fetchHashes();
+  }, [session]);
 
   const handleHistoryClick = (text) => {
     localStorage.setItem('searchText', text);
     router.push('/search');
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const now = new Date();
+    const timeDiff = now - new Date(timestamp);
+
+    const minutes = Math.floor(timeDiff / (1000 * 60));
+    if (minutes < 60) {
+      return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+      return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+    }
+
+    const days = Math.floor(hours / 24);
+    if (days < 7) {
+      return days === 1 ? '1 day ago' : `${days} days ago`;
+    }
+
+    return new Date(timestamp).toLocaleDateString();
   };
 
   return (
@@ -51,9 +85,11 @@ const Sidebar = ({ isOpen, onClose }) => {
           <div
             key={index}
             className='mt-2 mx-2 px-4 py-3 rounded-md bg-[#27282A] cursor-pointer hover:bg-[#323335] transition-colors duration-200'
-            onClick={() => handleHistoryClick(item)}
+            onClick={() => handleHistoryClick(item.title)}
+            title={item.title}  // Tooltip to show the full title
           >
-            <p className='text-sm truncate'>{item}</p>
+            <p className='text-sm truncate'>{item.title}</p>
+            <p className='text-xs text-gray-400'>{formatTimestamp(item.created_at)}</p>
           </div>
         ))}
       </div>

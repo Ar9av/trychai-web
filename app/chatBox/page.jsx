@@ -1,5 +1,5 @@
-// chatbot/page.jsx
-'use client';
+// app/chatBox/page.jsx
+"use client"
 import Sidebar from '@/components/sidebar';
 import React, { useEffect, useState } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
@@ -18,8 +18,18 @@ const Page = () => {
   const [outline, setOutline] = useState('');
   const [sources, setSources] = useState('');
   const router = useRouter();
-//   const [user, setUser] = useState(null);
   const { session } = useClerk();
+
+  // Logging user information
+  useEffect(() => {
+    const logUserInfo = async () => {
+      if (session) {
+        const user = session.user.emailAddresses[0].emailAddress;
+        console.log("User information:", user);
+      }
+    };
+    logUserInfo();
+  }, [session]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -74,6 +84,7 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <NavBar showNewReport={false} />
+
       <div className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar}></div>
         <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
