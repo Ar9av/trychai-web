@@ -7,6 +7,8 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) auth().protect();
+}, {
+  secretKey: process.env.CLERK_API_KEY,
 });
 
 export const config = {
