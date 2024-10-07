@@ -10,25 +10,17 @@ import {
 } from "@nextui-org/navbar";
 import { Link } from "@nextui-org/link";
 import { Button } from "@nextui-org/button";
-import ThemeSwitcher from "./ThemeSwitcher";
+import React, { useEffect, useState } from 'react';
 import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@nextui-org/dropdown";
-import {
-  AppWindow,
-  ChevronDown,
-  Contact2,
-  TimerReset,
-  User2,
-  Webhook,
-} from "lucide-react";
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 
-export default function NavBar() {
+
+export default function NavBar({ showNewReport = false }) { // Added parameter
   const menuItems = ["docs", "features", "pricing", "blog"];
-
   return (
     <Navbar isBlurred maxWidth="xl">
       <NavbarContent className="sm:hidden" justify="start">
@@ -43,30 +35,47 @@ export default function NavBar() {
       </NavbarContent>
       <NavbarContent className="hidden sm:flex gap-5" justify="center">
         <NavbarBrand>
-          <span className="font-light tracking-tighter text-2xl flex gap-3 justify-center items-center">
+          <Link href="/" className="font-light tracking-tighter text-2xl flex gap-3 justify-center items-center">
             TrychAI
-          </span>
+          </Link>
         </NavbarBrand>
       </NavbarContent>
       <NavbarContent justify="end">
-        <NavbarItem className="hidden sm:flex">
-          {/* <Button
-            as={Link}
-            color="primary"
-            href="#"
-            variant="solid"
-            className="hidden sm:flex"
-          >
-            Get Started
-          </Button> */}
-          <Link href='chatBox'>
-              <Button color="primary" variant="solid">
-                Get Started
+      <NavbarItem className="hidden sm:flex items-center gap-2">
+          <SignedOut>
+            <Button
+              as={Link}
+              color="primary"
+              href="/sign-in"
+              variant="solid"
+              className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+            >
+              Sign In
+            </Button>
+            <Button
+              as={Link}
+              color="primary"
+              href="/sign-up"
+              variant="solid"
+              className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+            >
+              Sign Up
+            </Button>
+          </SignedOut>
+          <SignedIn>
+            {showNewReport && ( // Conditional rendering based on the parameter
+              <Button
+                as={Link}
+                color="primary"
+                href="/chatBox"
+                variant="solid"
+                className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+              >
+                New Report
               </Button>
-              </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <ThemeSwitcher />
+            )}
+            <UserButton className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-md p-2" />
+          </SignedIn>
         </NavbarItem>
       </NavbarContent>
       <NavbarMenu>

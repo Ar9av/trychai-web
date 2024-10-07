@@ -1,25 +1,28 @@
 'use client'
 import Loader from '@/components/loader';
 import Sidebar from '@/components/sidebar';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
-import React, { useEffect, useState } from 'react';
 import { LuUser } from "react-icons/lu";
-import { Input, Spinner } from '@nextui-org/react';
+import { Spinner } from '@nextui-org/react';
 import ApiData from '@/components/apiData';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import app from '@/config';
-import { FaArrowRight } from 'react-icons/fa';
+import AWS from 'aws-sdk';
+import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
+import { useClerk } from "@clerk/nextjs";
+import NavBar from '@/components/navbar';
+import { toast } from 'react-toastify';
 
 const Page = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [showApiData, setShowApiData] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-    const auth = getAuth(app);
-    const [user, setUser] = useState(null);
-    const [savedText, setSavedText] = useState('');
+    const [apiData, setApiData] = useState(null);
+    const [searchParams, setSearchParams] = useState({ topic: '', outline: '', sources: '' });
     const [inputValue, setInputValue] = useState('');
-    const [submittedTexts, setSubmittedTexts] = useState([]); 
+    const [submittedTexts, setSubmittedTexts] = useState([]);
+    const intervalRef = useRef();
+    const { session } = useClerk();
     const router = useRouter();
 
     const checkScreenSize = () => {
@@ -31,14 +34,38 @@ const Page = () => {
     useEffect(() => {
         checkScreenSize();
         window.addEventListener('resize', checkScreenSize);
-
         return () => {
             window.removeEventListener('resize', checkScreenSize);
         };
     }, []);
 
+    useEffect(() => {
+        const storedParams = localStorage.getItem('searchParams');
+        if (storedParams) {
+            setSearchParams(JSON.parse(storedParams));
+        } else {
+            router.push('/');
+        }
+    }, [router]);
+
+    useEffect(() => {
+        const storedSidebarState = localStorage.getItem('isSidebarOpen');
+        if (storedSidebarState !== null) {
+            setIsSidebarOpen(JSON.parse(storedSidebarState));
+        }
+
+        if (searchParams.topic) {
+            fetchApiData(searchParams);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
+    }, [isSidebarOpen]);
+
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
+        localStorage.setItem('isSidebarOpen', JSON.stringify(!isSidebarOpen));
     };
 
     const reportResponse = [
@@ -47,39 +74,50 @@ const Page = () => {
         "Searching the Internet for sources and relevant content..."
     ];
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setShowApiData(true);
-        }, 4000);
+    const fetchApiData = useCallback(async (params) => {
+        const fetchFromLambda = async () => {
+            console.log("Lambda invoked");
+            const lambda = new AWS.Lambda({
+                region: 'us-west-2',
+                accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+            });
+            console.log(JSON.stringify(params))
+            const lambdaParams = {
+                FunctionName: 'arn:aws:lambda:us-west-2:986519088348:function:trychai-api',
+                InvocationType: 'RequestResponse',
+                Payload: JSON.stringify(params),
+            };
 
-        return () => clearTimeout(timer);
-    }, []);
+            intervalRef.current = setInterval(() => {
+                setCurrentMessageIndex((prev) => (prev + 1) % reportResponse.length);
+            }, 60000);
 
-    useEffect(() => {
-        if (!showApiData) {
-            const messageTimer = setInterval(() => {
-                setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % reportResponse.length);
-            }, 3000);
+            try {
+                const response = await lambda.invoke(lambdaParams).promise();
 
-            return () => clearInterval(messageTimer);
-        }
-    }, [showApiData, reportResponse.length]);
+                clearInterval(intervalRef.current);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUser(user);
+                const data = JSON.parse(response.Payload);
+                console.log(data)
+
+                return data;
+            } catch (error) {
+                clearInterval(intervalRef.current);
+                console.error('Error fetching or storing API data: ', error);
+                toast.error('Error fetching report data. Please try again.');
             }
-        })
-        return () => unsubscribe();
-    }, [auth])
+            return null;
+        };
 
-    useEffect(() => {
-        const storedText = localStorage.getItem('searchText');
-        if (storedText) {
-            setSavedText(storedText);
+        setShowApiData(false);
+        let data = await fetchFromLambda();
+        if (data) {
+            setApiData(data);
+            setShowApiData(true);
+            localStorage.setItem('apiData', JSON.stringify(data));
         }
-    }, []);
+    }, [reportResponse]);
 
     const handleInputChange = (e) => {
         setInputValue(e.target.value);
@@ -87,20 +125,10 @@ const Page = () => {
 
     const handleKeyPress = async (e) => {
         if (e.key === 'Enter' && inputValue.trim() !== '') {
-            await fetchAndStoreApiData(inputValue);
+            const newParams = { topic: inputValue, outline: searchParams.outline, sources: searchParams.sources };
+            await fetchApiData(newParams);
             setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]);
             setInputValue('');
-        }
-    };
-
-    const fetchAndStoreApiData = async (topic) => {
-        try {
-            const response = await fetch(`https://91e2nq3dy2.execute-api.us-east-2.amazonaws.com/dev/fast?topic=${encodeURIComponent(topic)}`);
-            const data = await response.json();
-            localStorage.setItem('apiData', JSON.stringify(data));
-            console.log("API Data stored: ", data);
-        } catch (error) {
-            console.error("Error fetching or storing API data: ", error);
         }
     };
 
@@ -114,22 +142,18 @@ const Page = () => {
                 {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
             </button>
             <div className={`flex flex-col items-center flex-grow transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-8'}`}>
-                <div className="w-full flex justify-between p-4">
-                    <h1 className="text-2xl font-semibold tracking-wide text-white">TrychAI</h1>
-                    <div className="flex gap-2 items-center text-white">
-                        <LuUser size={25} />
-                        <p>{user ? user.displayName : "SignIn"}</p>
-                    </div>
-                </div>
+                <NavBar />
                 <div className="border-2 w-3/4 border-blue-950 my-6"></div>
 
                 <div className='w-full px-4'>
                     <div className='flex gap-5 items-center'>
                         {!showApiData ? <Spinner color='default' /> : ""}
-                        <p className='text-2xl font-semibold text-white'>{savedText}</p>
+                        <p className='text-2xl font-semibold text-white'>{searchParams.topic}</p>
                     </div>
-                    <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
-                    {!showApiData ? <Loader /> : <ApiData />}
+                    <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
+                        {!showApiData ? reportResponse[currentMessageIndex] : ""}
+                    </p>
+                    {!showApiData ? <Loader /> : <ApiData apiData={apiData} />}
 
                     {submittedTexts.map((text, index) => (
                         <div key={index}>
@@ -137,22 +161,15 @@ const Page = () => {
                                 {!showApiData ? <Spinner color='default' /> : ""}
                                 <p className='text-2xl font-semibold text-white'>{text}</p>
                             </div>
-                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>{!showApiData ? reportResponse[currentMessageIndex] : ""}</p>
-                            {!showApiData ? <Loader /> : <ApiData />}
+                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
+                                {!showApiData ? "This might take 3-4 mins to process.." : ""}
+                            </p>
+                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>
+                                {!showApiData ? reportResponse[currentMessageIndex] : ""}
+                            </p>
+                            {!showApiData ? <Loader /> : <ApiData apiData={apiData} />}
                         </div>
                     ))}
-                </div>
-                <div className="relative flex justify-center w-full mt-4">
-                    <input
-                        className='fixed bottom-3 w-[40%] max-w-lg bg-[#1e1e1e] text-white p-2 rounded-full pl-4 pr-10 outline-none'
-                        style={{
-                            border: '1px solid #7083cf',
-                        }}
-                        placeholder="Ask a follow-up question..."
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        onKeyPress={handleKeyPress}
-                    />
                 </div>
             </div>
         </div>

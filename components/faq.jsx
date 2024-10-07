@@ -86,9 +86,6 @@ export default function Faq() {
           <AccordionItem aria-label="How is TrychAI different from ChatGPT?" title="How is TrychAI different from ChatGPT?">
             TrychAI is specifically fine-tuned on market research reports to provide accurate and relevant information. Unlike ChatGPT, TrychAI avoids hallucinations and always mentions the source of the information provided.
           </AccordionItem>
-          <AccordionItem aria-label="How do I contact support?" title="How do I contact support?">
-            If you have any questions or need support, please feel free to email us at support@trychai.com. We&apos;re here to help!
-          </AccordionItem>
         </Accordion>
       </motion.div>
     </section>

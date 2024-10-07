@@ -7,19 +7,63 @@ import { Button } from '@nextui-org/react';
 import { BiChat } from "react-icons/bi";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useClerk } from '@clerk/clerk-react';
+import { usePathname } from 'next/navigation'
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [previousReports, setPreviousReports] = useState([]);
   const router = useRouter();
+  const { session } = useClerk();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const storedReports = JSON.parse(localStorage.getItem('searchHistory')) || [];
-    setPreviousReports(storedReports);
-  }, []);
+    const fetchHashes = async () => {
+      if (session) {
+        const user_email = session.user.emailAddresses[0].emailAddress;
+        try {
+          const response = await fetch(`/api/getUserHashes?email=${encodeURIComponent(user_email)}`);
+          const data = await response.json();
+          setPreviousReports(data);
+        } catch (error) {
+          console.error('Failed to fetch data:', error);
+        }
+      }
+    };
+
+    fetchHashes();
+  }, [session]);
 
   const handleHistoryClick = (text) => {
-    localStorage.setItem('searchText', text);
-    router.push('/search');
+    console.log(text);
+    localStorage.setItem('searchParams', text);
+    if (pathname === '/search') {
+      console.log("reloading");
+      window.location.reload();
+    } else {
+      router.push('/search');
+    }
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const now = new Date();
+    const timeDiff = now - new Date(timestamp);
+
+    const minutes = Math.floor(timeDiff / (1000 * 60));
+    if (minutes < 60) {
+      return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+      return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+    }
+
+    const days = Math.floor(hours / 24);
+    if (days < 7) {
+      return days === 1 ? '1 day ago' : `${days} days ago`;
+    }
+
+    return new Date(timestamp).toLocaleDateString();
   };
 
   return (
@@ -49,16 +93,18 @@ const Sidebar = ({ isOpen, onClose }) => {
           <div
             key={index}
             className='mt-2 mx-2 px-4 py-3 rounded-md bg-[#27282A] cursor-pointer hover:bg-[#323335] transition-colors duration-200'
-            onClick={() => handleHistoryClick(item)}
+            onClick={() => handleHistoryClick(item.payload)}
+            title={item.title}
           >
-            <p className='text-sm truncate'>{item}</p>
+            <p className='text-sm truncate'>{item.title}</p>
+            <p className='text-xs text-gray-400'>{formatTimestamp(item.created_at)}</p>
           </div>
         ))}
       </div>
-      <div className='absolute bottom-5 left-0 right-0 flex items-center justify-start px-4 py-2 bg-[#1c1c1e]'>
+      {/* <div className='absolute bottom-5 left-0 right-0 flex items-center justify-start px-4 py-2 bg-[#1c1c1e]'>
         <LuUser size={24} className="mr-4" />
         <h1 className="text-sm font-medium">Report History</h1>
-      </div>
+      </div> */}
     </div>
   );
 };
