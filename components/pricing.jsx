@@ -1,16 +1,22 @@
 "use client";
+import { useState } from "react";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
 import { Divider } from "@nextui-org/divider";
+import { Input } from "@nextui-org/input";
+import { Modal } from "@nextui-org/modal";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 
 export default function Pricing() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+
   const plans = [
     {
       name: "Hobby Plan",
       desc: "Enjoy limited access to all our features",
-      price: 0,
+      price: '$0',
       isMostPop: false,
       features: [
         "Generate one report for free per work email",
@@ -19,7 +25,7 @@ export default function Pricing() {
     {
       name: "Basic Plan",
       desc: "Advanced options and customizability for your reports",
-      price: 10,
+      price: '$10',
       isMostPop: true,
       features: [
         "Generate reports with advanced options",
@@ -31,7 +37,7 @@ export default function Pricing() {
     {
       name: "Enterprise Plan",
       desc: "Unlimited access and advanced features for your team",
-      price: "🤔",
+      price: "Contact Us",
       isMostPop: false,
       features: [
         "API access",
@@ -42,6 +48,30 @@ export default function Pricing() {
       ],
     },
   ];
+
+  const handleReachUsOut = async () => {
+    try {
+      const response = await fetch('/api/interestedUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_email: userEmail,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Successfully submitted! We will contact you soon.');
+        setUserEmail('');
+        setIsModalOpen(false);
+      } else {
+        alert('Failed to submit. Please try again.');
+      }
+    } catch (error) {
+      alert('An error occurred. Please try again.');
+    }
+  };
 
   return (
     <section className="max-w-screen-xl w-full mx-auto px-4 py-28 gap-12 md:px-8 flex flex-col justify-center items-center">
@@ -77,7 +107,7 @@ export default function Pricing() {
               <Divider />
               <CardBody className="gap-3">
                 <div className="text-3xl font-semibold">
-                  ${item.price} <span className="text-xl font-normal">/report</span>
+                  {idx !== 2 ? item.price : item.price} <span className="text-xl font-normal">{idx !== 2 ? '/report' : null}</span>
                 </div>
                 <p>{item.desc}</p>
                 <ul className="p-8 space-y-3">
@@ -93,18 +123,47 @@ export default function Pricing() {
                 </ul>
               </CardBody>
               <CardFooter>
-                <Button
-                  className="w-full"
-                  variant="solid"
-                  color={item.isMostPop ? "primary" : "default"}
-                >
-                  Get Started
-                </Button>
+                {item.name === "Enterprise Plan" ? (
+                  <Button
+                    className="w-full"
+                    variant="solid"
+                    color="primary"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    Reach us out
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full"
+                    variant="solid"
+                    color={item.isMostPop ? "primary" : "default"}
+                  >
+                    Get Started
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           ))}
         </div>
       </motion.div>
+
+      {isModalOpen && (
+        <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+          <Modal.Header>
+            <h2>Contact Us</h2>
+          </Modal.Header>
+          <Modal.Body>
+            <Input
+              fullWidth
+              type="email"
+              placeholder="Enter your email"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+            />
+            <Button onClick={handleReachUsOut}>Submit</Button>
+          </Modal.Body>
+        </Modal>
+      )}
     </section>
   );
 }
