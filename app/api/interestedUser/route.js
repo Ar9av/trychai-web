@@ -38,10 +38,17 @@ export async function POST(request) {
   }
 }
 
-/**
- * Handler for other HTTP methods that are not allowed on this route.
- */
-export async function handler(req, res) {
-  res.setHeader('Allow', ['POST']);
-  res.status(405).end(`Method ${req.method} Not Allowed`);
+// You do not need a handler for unsupported methods; however, to handle all other unsupported methods generically,
+// you can create separate functions for each
+// e.g.
+/*
+export async function GET() {
+  return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
 }
+
+export async function PUT() {
+  return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+}
+
+// Similarly for DELETE, PATCH methods if needed
+*/
