@@ -82,7 +82,6 @@ const Page = () => {
                 accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
             });
-            console.log(JSON.stringify(params))
             const lambdaParams = {
                 FunctionName: 'arn:aws:lambda:us-west-2:986519088348:function:trychai-api',
                 InvocationType: 'RequestResponse',
@@ -99,7 +98,6 @@ const Page = () => {
                 clearInterval(intervalRef.current);
 
                 const data = JSON.parse(response.Payload);
-                console.log(data)
 
                 return data;
             } catch (error) {
@@ -133,7 +131,7 @@ const Page = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-black flex">
+        <div style={{ overflow: 'hidden', height: '100vh' }} className="relative min-h-screen bg-black flex">
             <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
             <button
                 onClick={toggleSidebar}

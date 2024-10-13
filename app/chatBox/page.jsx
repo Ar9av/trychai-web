@@ -117,27 +117,29 @@ const Page = () => {
         </div>
         <div className='flex items-center justify-start gap-3 mt-2 w-full max-w-3xl'>
           <p>Advanced Options</p>
-          <Switch defaultSelected={false} size='sm' color='default' onChange={toggleAdvancedOptions} />
+          <Switch defaultSelected={false} size='sm' color='blue' onChange={toggleAdvancedOptions} />
         </div>
         {isAdvancedOptionsOn && (
           <div className='mt-8 flex flex-col gap-6 w-full max-w-3xl'>
-            <div className="w-full sm:w-1/2">
-              <p>Outline</p>
-              <Textarea
-                value={outline}
-                onChange={e => setOutline(e.target.value)}
-                placeholder="Create a report Outline to fit in the way your report needs to be generated..."
-                className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
-              />
-            </div>
-            <div className="w-full sm:w-1/2">
-              <p>Sources</p>
-              <Textarea
-                value={sources}
-                onChange={e => setSources(e.target.value)}
-                placeholder="Enter the sources/links in new lines..."
-                className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
-              />
+            <div className="flex w-full gap-4">
+              <div className="w-1/2">
+                <p>Outline</p>
+                <Textarea
+                  value={outline}
+                  onChange={e => setOutline(e.target.value)}
+                  placeholder="Create a report Outline to fit in the way your report needs to be generated..."
+                  className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
+                />
+              </div>
+              <div className="w-1/2">
+                <p>Sources</p>
+                <Textarea
+                  value={sources}
+                  onChange={e => setSources(e.target.value)}
+                  placeholder="Enter the sources/links in new lines..."
+                  className="w-full border-5 rounded-lg border-[#7083cf] h-[80px]"
+                />
+              </div>
             </div>
           </div>
         )}
