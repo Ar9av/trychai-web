@@ -7,12 +7,13 @@ const pool = new Pool({
 
 export async function GET(req) {
   try {
-    const query = `
-      SELECT dtv2.title, ud.created_at, dtv2.payload
-      FROM user_data ud
-      JOIN data_table_v2 dtv2 ON ud.md5_hash = dtv2.md5_hash
-      order by ud.created_at desc;
-    `;
+    // const query = `
+    //   SELECT dtv2.title, ud.created_at, dtv2.payload
+    //   FROM user_data ud
+    //   JOIN data_table_v2 dtv2 ON ud.md5_hash = dtv2.md5_hash
+    //   order by ud.created_at desc;
+    // `;
+    const query = `SELECT dtv2.title, dtv2.created_at, dtv2.payload FROM data_table_v2 dtv2 order by dtv2.created_at desc;`;
 
     const result = await pool.query(query);
     const data = result.rows;

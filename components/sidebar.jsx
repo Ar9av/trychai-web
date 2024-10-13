@@ -34,10 +34,8 @@ const Sidebar = ({ isOpen, onClose }) => {
   }, [session]);
 
   const handleHistoryClick = (text) => {
-    console.log(text);
     localStorage.setItem('searchParams', text);
     if (pathname === '/search') {
-      console.log("reloading");
       window.location.reload();
     } else {
       router.push('/search');
@@ -84,11 +82,11 @@ const Sidebar = ({ isOpen, onClose }) => {
       <div className='flex justify-center items-center mt-4 mb-6'>
         <Link href='/chatBox' className='w-[90%]'>
           <Button className='w-full' variant="bordered" startContent={<BiChat size={20} />}>
-            New Chat
+            New Report
           </Button>
         </Link>
       </div>
-      <div className="overflow-y-auto h-[calc(100vh-200px)]">
+      <div className="overflow-y-auto h-full" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {previousReports.map((item, index) => (
           <div
             key={index}

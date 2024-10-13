@@ -19,7 +19,6 @@ const Sources = () => {
     fetchData();
   }, []);
 
-  console.log("Hello Data,", data.sources);
 
   const sourceData = [
     {

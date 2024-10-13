@@ -7,8 +7,6 @@ export async function POST(req) {
   const created_at = new Date().toISOString();
 
   try {
-    console.log("req:", req);
-    console.log("saving report")
     const { user_email, md5_hash } = await req.json();
     const checkQuery = 'SELECT * FROM user_data WHERE user_email = $1 AND md5_hash = $2';
     const checkResult = await pool.query(checkQuery, [user_email, md5_hash]);

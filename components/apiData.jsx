@@ -36,12 +36,21 @@ const ApiData = ({ apiData }) => {
           {(() => {
             try {
               const parsedBody = JSON.parse(apiData.body);
-              return parsedBody.summary || apiData.body;
+              return `${parsedBody.summary || apiData.body}`;
             } catch (error) {
-              return apiData.body;
+              return `${apiData.body}`;
             }
           })()}
+          
         </ReactMarkdown>
+      <div className='my-64'>
+        <hr />
+        <hr />
+        <hr />
+        <hr />
+        <hr />
+        
+      </div>
       </div>
 
       {/* <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
