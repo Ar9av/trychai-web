@@ -18,14 +18,20 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     const fetchHashes = async () => {
-      if (session) {
+      if (session && !localStorage.getItem('previousReports')) {
         const user_email = session.user.emailAddresses[0].emailAddress;
         try {
           const response = await fetch(`/api/getUserHashes?email=${encodeURIComponent(user_email)}`);
           const data = await response.json();
           setPreviousReports(data);
+          localStorage.setItem('previousReports', JSON.stringify(data));
         } catch (error) {
           console.error('Failed to fetch data:', error);
+        }
+      } else {
+        const cachedData = localStorage.getItem('previousReports');
+        if (cachedData) {
+          setPreviousReports(JSON.parse(cachedData));
         }
       }
     };

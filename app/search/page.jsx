@@ -114,6 +114,17 @@ const Page = () => {
             setApiData(data);
             setShowApiData(true);
             localStorage.setItem('apiData', JSON.stringify(data));
+        const existingData = JSON.parse(localStorage.getItem('apiData'));
+        if (!existingData.existing_entry) {
+            const previousReports = JSON.parse(localStorage.getItem('previousReports')) || [];
+            const newEntry = {
+                title: params.topic,
+                created_at: new Date().toISOString(),
+                payload: JSON.stringify(params)
+            };
+            previousReports.push(newEntry);
+            localStorage.setItem('previousReports', JSON.stringify(previousReports));
+        }
         }
     }, [reportResponse]);
 
