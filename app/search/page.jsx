@@ -144,14 +144,16 @@ const Page = () => {
     return (
         <div style={{ overflow: 'hidden', height: '100vh' }} className="relative min-h-screen bg-black flex">
             <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
-            <button
-                onClick={toggleSidebar}
-                className={`absolute top-1/2 transform -translate-y-1/2 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'left-[240px]' : 'left-4'}`}
-            >
-                {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
-            </button>
+            {window.innerWidth > 768 && (
+                <button
+                    onClick={toggleSidebar}
+                    className={`absolute top-1/2 transform -translate-y-1/2 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'left-[240px]' : 'left-4'}`}
+                >
+                    {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
+                </button>
+            )}
             <div className={`flex flex-col items-center flex-grow transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-8'}`}>
-                <NavBar />
+                <NavBar onToggleSidebar={toggleSidebar}/>
                 <div className="border-2 w-3/4 border-blue-950 my-6"></div>
 
                 <div className='w-full px-4'>
