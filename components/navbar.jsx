@@ -36,7 +36,10 @@ export default function NavBar({ showNewReport = false }) { // Added parameter
       <NavbarContent className="hidden sm:flex gap-5" justify="center">
         <NavbarBrand>
           <Link href="/" className="font-light tracking-tighter text-2xl flex gap-3 justify-center items-center">
-            TrychAI
+          <span className="bg-gradient-to-t from-light to-foreground text-transparent bg-clip-text border-none">
+              TrychAI
+            </span>
+            {/* TrychAI */}
           </Link>
         </NavbarBrand>
       </NavbarContent>
@@ -78,7 +81,7 @@ export default function NavBar({ showNewReport = false }) { // Added parameter
           </SignedIn>
         </NavbarItem>
       </NavbarContent>
-      <NavbarMenu>
+      {/* <NavbarMenu>
         {menuItems.map((item, index) => (
           <NavbarMenuItem key={`${item}-${index}`}>
             <Link className="w-full" href="#" size="lg" color="foreground">
@@ -86,7 +89,7 @@ export default function NavBar({ showNewReport = false }) { // Added parameter
             </Link>
           </NavbarMenuItem>
         ))}
-      </NavbarMenu>
+      </NavbarMenu> */}
     </Navbar>
   );
 }
