@@ -1,7 +1,7 @@
 'use client'
 import Loader from '@/components/loader';
 import Sidebar from '@/components/sidebar';
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
 import { LuUser } from "react-icons/lu";
 import { Spinner } from '@nextui-org/react';
@@ -14,7 +14,7 @@ import NavBar from '@/components/navbar';
 import { toast } from 'react-toastify';
 
 const Page = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(typeof window !== 'undefined' && window.innerWidth > 768);
     const [showApiData, setShowApiData] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [apiData, setApiData] = useState(null);
@@ -26,17 +26,19 @@ const Page = () => {
     const router = useRouter();
 
     const checkScreenSize = () => {
-        if (window.innerWidth <= 768) {
+        if (typeof window !== 'undefined' && window.innerWidth <= 768) {
             setIsSidebarOpen(false);
         }
     };
 
     useEffect(() => {
-        checkScreenSize();
-        window.addEventListener('resize', checkScreenSize);
-        return () => {
-            window.removeEventListener('resize', checkScreenSize);
-        };
+        if (typeof window !== 'undefined') {
+            checkScreenSize();
+            window.addEventListener('resize', checkScreenSize);
+            return () => {
+                window.removeEventListener('resize', checkScreenSize);
+            };
+        }
     }, []);
 
     useEffect(() => {
@@ -49,9 +51,11 @@ const Page = () => {
     }, [router]);
 
     useEffect(() => {
-        const storedSidebarState = localStorage.getItem('isSidebarOpen');
-        if (storedSidebarState !== null) {
-            setIsSidebarOpen(JSON.parse(storedSidebarState));
+        if (typeof window !== 'undefined') {
+            const storedSidebarState = localStorage.getItem('isSidebarOpen');
+            if (storedSidebarState !== null) {
+                setIsSidebarOpen(JSON.parse(storedSidebarState));
+            }
         }
 
         if (searchParams.topic) {
@@ -60,19 +64,23 @@ const Page = () => {
     }, [searchParams]);
 
     useEffect(() => {
-        localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
+        }
     }, [isSidebarOpen]);
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
-        localStorage.setItem('isSidebarOpen', JSON.stringify(!isSidebarOpen));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('isSidebarOpen', JSON.stringify(!isSidebarOpen));
+        }
     };
 
-    const reportResponse = [
+    const reportResponse = useMemo(() => [
         "Generating and Polishing the report...",
         "Creating Outline for the report...",
         "Searching the Internet for sources and relevant content..."
-    ];
+    ], []);
 
     const fetchApiData = useCallback(async (params) => {
         const fetchFromLambda = async () => {
@@ -89,7 +97,7 @@ const Page = () => {
             };
 
             intervalRef.current = setInterval(() => {
-                setCurrentMessageIndex((prev) => (prev + 1) % reportResponse.length);
+                setCurrentMessageIndex(prev => (prev + 1) % reportResponse.length);
             }, 60000);
 
             try {
@@ -114,17 +122,17 @@ const Page = () => {
             setApiData(data);
             setShowApiData(true);
             localStorage.setItem('apiData', JSON.stringify(data));
-        const existingData = JSON.parse(localStorage.getItem('apiData'));
-        if (!existingData.existing_entry) {
-            const previousReports = JSON.parse(localStorage.getItem('previousReports')) || [];
-            const newEntry = {
-                title: params.topic,
-                created_at: new Date().toISOString(),
-                payload: JSON.stringify(params)
-            };
-            previousReports.push(newEntry);
-            localStorage.setItem('previousReports', JSON.stringify(previousReports));
-        }
+            const existingData = JSON.parse(localStorage.getItem('apiData'));
+            if (!existingData.existing_entry) {
+                const previousReports = JSON.parse(localStorage.getItem('previousReports')) || [];
+                const newEntry = {
+                    title: params.topic,
+                    created_at: new Date().toISOString(),
+                    payload: JSON.stringify(params)
+                };
+                previousReports.push(newEntry);
+                localStorage.setItem('previousReports', JSON.stringify(previousReports));
+            }
         }
     }, [reportResponse]);
 
@@ -136,7 +144,7 @@ const Page = () => {
         if (e.key === 'Enter' && inputValue.trim() !== '') {
             const newParams = { topic: inputValue, outline: searchParams.outline, sources: searchParams.sources };
             await fetchApiData(newParams);
-            setSubmittedTexts((prevTexts) => [...prevTexts, inputValue]);
+            setSubmittedTexts(prevTexts => [...prevTexts, inputValue]);
             setInputValue('');
         }
     };
@@ -144,7 +152,7 @@ const Page = () => {
     return (
         <div style={{ overflow: 'hidden', height: '100vh' }} className="relative min-h-screen bg-black flex">
             <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
-            {window.innerWidth > 768 && (
+            {typeof window !== 'undefined' && window.innerWidth > 768 && (
                 <button
                     onClick={toggleSidebar}
                     className={`absolute top-1/2 transform -translate-y-1/2 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'left-[240px]' : 'left-4'}`}
@@ -154,7 +162,7 @@ const Page = () => {
             )}
             <div className={`flex flex-col items-center flex-grow transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-8'}`}>
                 <NavBar onToggleSidebar={toggleSidebar}/>
-                <div className="border-2 w-3/4 border-blue-950 my-6"></div>
+                <div className="border-2 w-3/4 border-transparent my-6"></div>
 
                 <div className='w-full px-4'>
                     <div className='flex gap-5 items-center'>

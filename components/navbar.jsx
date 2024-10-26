@@ -14,20 +14,26 @@ import {
   SignedIn,
   SignedOut,
   UserButton,
+  useSession // Ensure this is imported
 } from "@clerk/nextjs";
 
 export default function NavBar({ showNewReport = false, onToggleSidebar }) {
-  const menuItems = ["docs", "features", "pricing", "blog"];
+  const { session } = useSession();
+  const isBrowser = typeof window !== 'undefined'; // Check if running in the browser
+
+  // Only show the toggle button if running in the browser
+  const toggleButton = isBrowser && window.innerWidth <= 768 && session && (
+    <button onClick={onToggleSidebar} className="flex flex-col items-center justify-center p-2">
+      <span className="block w-6 h-0.5 bg-white mb-1"></span>
+      <span className="block w-6 h-0.5 bg-white mb-1"></span>
+      <span className="block w-6 h-0.5 bg-white"></span>
+      <span className="sr-only">Toggle navigation</span>
+    </button>
+  );
+
   return (
     <Navbar isBlurred maxWidth="xl">
-      {window.innerWidth <= 768 && (
-        <button onClick={onToggleSidebar} className="flex flex-col items-center justify-center p-2">
-          <span className="block w-6 h-0.5 bg-white mb-1"></span>
-          <span className="block w-6 h-0.5 bg-white mb-1"></span>
-          <span className="block w-6 h-0.5 bg-white"></span>
-          <span className="sr-only">Toggle navigation</span>
-        </button>
-      )}
+      {toggleButton}
       <NavbarContent className="sm:hidden pr-3" justify="center">
         <NavbarBrand>
           <span className="font-light tracking-tighter text-inherit text-lg">
