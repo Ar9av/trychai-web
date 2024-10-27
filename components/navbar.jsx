@@ -4,11 +4,10 @@ import {
   NavbarBrand,
   NavbarContent,
   NavbarItem,
-  NavbarMenuToggle,
 } from "@nextui-org/navbar";
 import { Link } from "@nextui-org/link";
 import { Button } from "@nextui-org/button";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ClerkProvider,
   SignedIn,
@@ -21,21 +20,35 @@ export default function NavBar({ showNewReport = false, onToggleSidebar }) {
   const { session } = useSession();
   const isBrowser = typeof window !== 'undefined'; // Check if running in the browser
 
-  // Only show the toggle button if running in the browser
-  const toggleButton = isBrowser && window.innerWidth <= 768 && session && (
-    <button onClick={onToggleSidebar} className="flex flex-col items-center justify-center p-2">
-      <span className="block w-6 h-0.5 bg-white mb-1"></span>
-      <span className="block w-6 h-0.5 bg-white mb-1"></span>
-      <span className="block w-6 h-0.5 bg-white"></span>
-      <span className="sr-only">Toggle navigation</span>
-    </button>
+  // State to track window width for responsive behavior
+  const [windowWidth, setWindowWidth] = useState(isBrowser ? window.innerWidth : 0);
+
+  // Effect to handle window resize
+  useEffect(() => {
+    if (isBrowser) {
+      const handleResize = () => setWindowWidth(window.innerWidth);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [isBrowser]);
+
+  // Only show the toggle button if running in the browser and on mobile
+  const toggleButton = windowWidth <= 768 && session && (
+    <div className="absolute left-0 ml-3">
+      <button onClick={onToggleSidebar} className="flex flex-col items-center justify-center">
+        <span className="block w-6 h-0.5 bg-white mb-1"></span>
+        <span className="block w-6 h-0.5 bg-white mb-1"></span>
+        <span className="block w-6 h-0.5 bg-white"></span>
+        <span className="sr-only">Toggle navigation</span>
+      </button>
+    </div>
   );
 
   return (
     <Navbar isBlurred maxWidth="xl">
       {toggleButton}
       <NavbarContent className="sm:hidden pr-3" justify="center">
-        <NavbarBrand>
+        <NavbarBrand className="pl-10"> {/* Adjust this class to add padding */}
           <span className="font-light tracking-tighter text-inherit text-lg">
             TrychAI
           </span>
