@@ -14,14 +14,17 @@ import NavBar from '@/components/navbar';
 import { toast } from 'react-toastify';  
 
 const Page = () => {  
-    const [isSidebarOpen, setIsSidebarOpen] = useState(typeof window !== 'undefined' && window.innerWidth > 768);  
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const [isSidebarOpen, setIsSidebarOpen] = useState(isMobile);  
     const [showApiData, setShowApiData] = useState(false);  
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);  
+    const [timeRemaining, setTimeRemaining] = useState(4 * 60); // 4 mins in seconds
     const [apiData, setApiData] = useState(null);  
     const [searchParams, setSearchParams] = useState({ topic: '', outline: '', sources: '' });  
     const [inputValue, setInputValue] = useState('');  
     const [submittedTexts, setSubmittedTexts] = useState([]);  
     const intervalRef = useRef();  
+    const timerRef = useRef();  
     const { session } = useClerk();  
     const router = useRouter();  
 
@@ -98,24 +101,38 @@ const Page = () => {
 
             intervalRef.current = setInterval(() => {  
                 setCurrentMessageIndex(prev => (prev + 1) % reportResponse.length);  
-            }, 60000);  
+            }, 30000);  
+
+            // Start countdown timer
+            timerRef.current = setInterval(() => {
+                setTimeRemaining(prev => {
+                    if (prev <= 0) {
+                        clearInterval(timerRef.current);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
 
             try {  
                 const response = await lambda.invoke(lambdaParams).promise();  
 
                 clearInterval(intervalRef.current);  
+                clearInterval(timerRef.current);
 
                 const data = JSON.parse(response.Payload);  
 
                 return data;  
             } catch (error) {  
                 clearInterval(intervalRef.current);  
+                clearInterval(timerRef.current);
                 console.error('Error fetching or storing API data: ', error);  
                 toast.error('Error fetching report data. Please try again.');  
             }  
             return null;  
         };  
 
+        setTimeRemaining(4 * 60); // Reset timer to 4 minutes
         setShowApiData(false);  
         let data = await fetchFromLambda();  
         if (data) {  
@@ -149,6 +166,12 @@ const Page = () => {
         }  
     };  
 
+    const formatTime = (timeInSeconds) => {
+        const minutes = Math.floor(timeInSeconds / 60);
+        const seconds = timeInSeconds % 60;
+        return `${minutes} min ${seconds < 10 ? '0' : ''}${seconds} sec`;
+    };
+
     return (  
         <div style={{ overflow: 'hidden', height: '100vh' }} className="relative min-h-screen bg-black flex p-4">  
             <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />  
@@ -160,7 +183,14 @@ const Page = () => {
                     {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}  
                 </button>  
             )}  
-            <div className={`flex flex-col items-center flex-grow transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-8'} ${typeof window !== 'undefined' && window.innerWidth <= 768 ? 'w-full' : ''}`}>
+            <div
+                className={`flex flex-col items-center flex-grow transition-all duration-300 ${
+                    isMobile 
+                    ? 'ml-0' 
+                    : isSidebarOpen 
+                        ? 'ml-72' 
+                        : 'ml-8'
+                }`}>
                 <NavBar onToggleSidebar={toggleSidebar} />  
                 <div className="border-2 w-3/4 border-transparent my-6"></div>  
                 <div className='w-full'>  
@@ -168,6 +198,9 @@ const Page = () => {
                         {!showApiData ? <Spinner color='default' /> : ""}  
                         <p className='text-2xl font-semibold text-white'>{searchParams.topic}</p>  
                     </div>  
+                    <p className='text-[#9EA2A5] text-xs my-7 ml-8'>  
+                        {!showApiData ? `Report will be generated in ${formatTime(timeRemaining)}` : ""}  
+                    </p>  
                     <p className='text-[#9EA2A5] text-xs my-7 ml-8'>  
                         {!showApiData ? reportResponse[currentMessageIndex] : ""}  
                     </p>  
@@ -179,7 +212,7 @@ const Page = () => {
                                 <p className='text-2xl font-semibold text-white'>{text}</p>  
                             </div>  
                             <p className='text-[#9EA2A5] text-xs my-7 ml-8'>  
-                                {!showApiData ? "This might take 3-4 mins to process.." : ""}  
+                                {!showApiData ? `Remaining time: ${formatTime(timeRemaining)}` : ""}  
                             </p>  
                             <p className='text-[#9EA2A5] text-xs my-7 ml-8'>  
                                 {!showApiData ? reportResponse[currentMessageIndex] : ""}  
