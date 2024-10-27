@@ -15,7 +15,7 @@ import { toast } from 'react-toastify';
 
 const Page = () => {  
     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-    const [isSidebarOpen, setIsSidebarOpen] = useState(isMobile);  
+    const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);  
     const [showApiData, setShowApiData] = useState(false);  
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);  
     const [timeRemaining, setTimeRemaining] = useState(4 * 60); // 4 mins in seconds
@@ -80,9 +80,10 @@ const Page = () => {
     };  
 
     const reportResponse = useMemo(() => [  
-        "Generating and Polishing the report...",  
+        "Searching the Internet for sources and relevant content...",
         "Creating Outline for the report...",  
-        "Searching the Internet for sources and relevant content..."  
+        "Generating and Polishing the report...",  
+        
     ], []);  
 
     const fetchApiData = useCallback(async (params) => {  
@@ -198,10 +199,10 @@ const Page = () => {
                         {!showApiData ? <Spinner color='default' /> : ""}  
                         <p className='text-2xl font-semibold text-white'>{searchParams.topic}</p>  
                     </div>  
-                    <p className='text-[#9EA2A5] text-xs my-7 ml-8'>  
+                    <p className='text-[#9EA2A5] text-xs my-7'>  
                         {!showApiData ? `Report will be generated in ${formatTime(timeRemaining)}` : ""}  
                     </p>  
-                    <p className='text-[#9EA2A5] text-xs my-7 ml-8'>  
+                    <p className='text-[#9EA2A5] text-xs my-7'>  
                         {!showApiData ? reportResponse[currentMessageIndex] : ""}  
                     </p>  
                     {!showApiData ? <Loader /> : <div className="w-full"><ApiData apiData={apiData} /></div>}  
@@ -211,10 +212,10 @@ const Page = () => {
                                 {!showApiData ? <Spinner color='default' /> : ""}  
                                 <p className='text-2xl font-semibold text-white'>{text}</p>  
                             </div>  
-                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>  
+                            <p className='text-[#9EA2A5] text-xs my-7'>  
                                 {!showApiData ? `Remaining time: ${formatTime(timeRemaining)}` : ""}  
                             </p>  
-                            <p className='text-[#9EA2A5] text-xs my-7 ml-8'>  
+                            <p className='text-[#9EA2A5] text-xs my-7'>  
                                 {!showApiData ? reportResponse[currentMessageIndex] : ""}  
                             </p>  
                             {!showApiData ? <Loader /> : <div className="w-full"><ApiData apiData={apiData} /></div>}  
