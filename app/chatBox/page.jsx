@@ -1,5 +1,4 @@
-// app/chatBox/page.jsx
-"use client"
+"use client";
 import Sidebar from '@/components/sidebar';
 import React, { useEffect, useState } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
@@ -12,7 +11,7 @@ import NavBar from '@/components/navbar';
 import { useClerk } from "@clerk/nextjs";
 
 const Page = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default to false
   const [isAdvancedOptionsOn, setIsAdvancedOptionsOn] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [outline, setOutline] = useState('');
@@ -57,24 +56,26 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const storedText = localStorage.getItem('searchText');
-    if (storedText) {
-      setSearchText(storedText);
-    }
+    if (typeof window !== 'undefined') {
+      const storedText = localStorage.getItem('searchText');
+      if (storedText) {
+        setSearchText(storedText);
+      }
 
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    if (mediaQuery.matches) {
-      setIsSidebarOpen(false);
-    }
-
-    const handleResize = () => {
-      if (window.innerWidth <= 768) {
+      const mediaQuery = window.matchMedia('(max-width: 768px)');
+      if (mediaQuery.matches) {
         setIsSidebarOpen(false);
       }
-    };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+      const handleResize = () => {
+        if (window.innerWidth <= 768) {
+          setIsSidebarOpen(false);
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
   }, []);
 
   const handleExampleClick = (text) => {
@@ -83,17 +84,21 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      <NavBar showNewReport={false} />
+      <NavBar showNewReport={false} onToggleSidebar={toggleSidebar} />
 
       <div className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar}></div>
         <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
-        <button
-          onClick={toggleSidebar}
-          className={`fixed top-16 left-4 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out z-50 sm:top-1/2 sm:-translate-y-1/2 ${isSidebarOpen ? 'sm:left-[260px]' : 'sm:left-4'}`}
-        >
-          {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
-        </button>
+        {typeof window !== 'undefined' && window.innerWidth > 768 && (
+          <div>
+            <button
+              onClick={toggleSidebar}
+              className={`fixed top-16 left-4 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out z-50 sm:top-1/2 sm:-translate-y-1/2 ${isSidebarOpen ? 'sm:left-[260px]' : 'sm:left-4'}`}
+            >
+              {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
+            </button>
+          </div>
+        )}
         <div className="flex flex-col items-center text-center w-full max-w-3xl">
           <h1 className="text-4xl font-light tracking-tighter mx-auto md:text-6xl bg-gradient-to-b from-foreground to-foreground/70 text-transparent bg-clip-text text-pretty mb-2">
             <span className="bg-gradient-to-t from-light to-foreground text-transparent bg-clip-text border-none">

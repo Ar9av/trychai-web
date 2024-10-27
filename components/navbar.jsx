@@ -5,27 +5,35 @@ import {
   NavbarContent,
   NavbarItem,
   NavbarMenuToggle,
-  NavbarMenu,
-  NavbarMenuItem,
 } from "@nextui-org/navbar";
 import { Link } from "@nextui-org/link";
 import { Button } from "@nextui-org/button";
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ClerkProvider,
   SignedIn,
   SignedOut,
   UserButton,
+  useSession // Ensure this is imported
 } from "@clerk/nextjs";
 
+export default function NavBar({ showNewReport = false, onToggleSidebar }) {
+  const { session } = useSession();
+  const isBrowser = typeof window !== 'undefined'; // Check if running in the browser
 
-export default function NavBar({ showNewReport = false }) { // Added parameter
-  const menuItems = ["docs", "features", "pricing", "blog"];
+  // Only show the toggle button if running in the browser
+  const toggleButton = isBrowser && window.innerWidth <= 768 && session && (
+    <button onClick={onToggleSidebar} className="flex flex-col items-center justify-center p-2">
+      <span className="block w-6 h-0.5 bg-white mb-1"></span>
+      <span className="block w-6 h-0.5 bg-white mb-1"></span>
+      <span className="block w-6 h-0.5 bg-white"></span>
+      <span className="sr-only">Toggle navigation</span>
+    </button>
+  );
+
   return (
     <Navbar isBlurred maxWidth="xl">
-      <NavbarContent className="sm:hidden" justify="start">
-        <NavbarMenuToggle />
-      </NavbarContent>
+      {toggleButton}
       <NavbarContent className="sm:hidden pr-3" justify="center">
         <NavbarBrand>
           <span className="font-light tracking-tighter text-inherit text-lg">
@@ -36,12 +44,14 @@ export default function NavBar({ showNewReport = false }) { // Added parameter
       <NavbarContent className="hidden sm:flex gap-5" justify="center">
         <NavbarBrand>
           <Link href="/" className="font-light tracking-tighter text-2xl flex gap-3 justify-center items-center">
-            TrychAI
+            <span className="bg-gradient-to-t from-light to-foreground text-transparent bg-clip-text border-none">
+              TrychAI
+            </span>
           </Link>
         </NavbarBrand>
       </NavbarContent>
       <NavbarContent justify="end">
-      <NavbarItem className="hidden sm:flex items-center gap-2">
+        <NavbarItem className="hidden sm:flex items-center gap-2">
           <SignedOut>
             <Button
               as={Link}
@@ -63,7 +73,7 @@ export default function NavBar({ showNewReport = false }) { // Added parameter
             </Button>
           </SignedOut>
           <SignedIn>
-            {showNewReport && ( // Conditional rendering based on the parameter
+            {showNewReport && (
               <Button
                 as={Link}
                 color="primary"
@@ -78,15 +88,6 @@ export default function NavBar({ showNewReport = false }) { // Added parameter
           </SignedIn>
         </NavbarItem>
       </NavbarContent>
-      <NavbarMenu>
-        {menuItems.map((item, index) => (
-          <NavbarMenuItem key={`${item}-${index}`}>
-            <Link className="w-full" href="#" size="lg" color="foreground">
-              {item}
-            </Link>
-          </NavbarMenuItem>
-        ))}
-      </NavbarMenu>
     </Navbar>
   );
 }
