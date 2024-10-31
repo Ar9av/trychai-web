@@ -24,6 +24,30 @@ const ApiData = ({ apiData }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  const components = {
+    // Headers
+    ch1: ({node, ...props}) => <h1 className="font-mono text-3xl mb-4 text-center" {...props} />,
+    h1: ({node, ...props}) => <h1 className="font-mono text-3xl mb-4" {...props} />,
+    h2: ({node, ...props}) => <h2 className="font-sans text-2xl mb-3 pl-4" {...props} />,
+    h3: ({node, ...props}) => <h3 className="font-sans text-xl mb-2 pl-6" {...props} />,
+    
+    // Paragraphs
+    p: ({node, ...props}) => <p className="font-sans mb-4" {...props} />,
+    
+    // Lists
+    ul: ({node, ...props}) => <ul className="font-sans list-disc ml-6 mb-4" {...props} />,
+    ol: ({node, ...props}) => <ol className="font-sans list-decimal ml-6 mb-4" {...props} />,
+    
+    // Inline elements
+    strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+    em: ({node, ...props}) => <em className="italic" {...props} />,
+    
+    // Code blocks
+    code: ({node, inline, ...props}) => 
+      inline ? 
+        <code className="font-mono bg-gray-100 px-1 rounded" {...props} /> :
+        <code className="font-mono block bg-gray-100 p-4 rounded mb-4" {...props} />
+  };
 
   return (
     <div className='relative flex w-full' style={{ height: '100vh' }}>
@@ -32,6 +56,7 @@ const ApiData = ({ apiData }) => {
           className='markdown-body'
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
+          components={components}
         >
           {(() => {
             try {

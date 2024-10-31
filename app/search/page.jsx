@@ -206,11 +206,11 @@ const Page = () => {
                 }`}
             >
                 <NavBar onToggleSidebar={toggleSidebar} />
-                <div className="border-2 w-3/4 border-transparent my-6"></div>
+                {/* <div className="border-2 w-3/4 border-transparent my-6"></div> */}
                 <div className='w-full'>
-                    <div className='flex gap-5 items-center w-full'>
+                    <div className='flex gap-5 items-center justify-center w-full'>
                         {!showApiData ? <Spinner color='default' /> : ""}
-                        <p className='text-2xl font-semibold text-white'>{searchParams.topic}</p>
+                        <p className='text-4xl font-mono text-white'>{searchParams.topic.charAt(0).toUpperCase() + searchParams.topic.slice(1)}</p>
                     </div>
                     <p className='text-[#9EA2A5] text-xs my-7'>
                         {!showApiData ? `Report will be generated in ${formatTime(timeRemaining)}` : ""}

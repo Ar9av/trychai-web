@@ -43,15 +43,17 @@ const Page = () => {
       toast.error("Please log in to continue");
     } else {
       const currentSearch = searchText.trim();
-      let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-      if (!history.includes(currentSearch)) {
-        history.push(currentSearch);
-        localStorage.setItem('searchHistory', JSON.stringify(history));
-      }
-      const searchParams = JSON.stringify({ topic: searchText, outline, sources });
-      localStorage.setItem('searchParams', searchParams);
+      if (currentSearch) {
+        let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+        if (!history.includes(currentSearch)) {
+          history.push(currentSearch);
+          localStorage.setItem('searchHistory', JSON.stringify(history));
+        }
+        const searchParams = JSON.stringify({ topic: searchText, outline, sources });
+        localStorage.setItem('searchParams', searchParams);
 
-      router.push("/search");
+        router.push("/search");
+      }
     }
   };
 
