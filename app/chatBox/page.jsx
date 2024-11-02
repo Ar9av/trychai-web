@@ -151,7 +151,7 @@ const Page = () => {
       <NavBar showNewReport={false} onToggleSidebar={toggleSidebar} />
 
       <div className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar}></div>
+        {/* <div className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar}></div> */}
         <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
         {typeof window !== 'undefined' && window.innerWidth > 768 && (
           <div>

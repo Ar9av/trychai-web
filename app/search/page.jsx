@@ -214,7 +214,7 @@ const Page = () => {
                 <div className='w-full'>
                     <div className='flex gap-5 items-center justify-center w-full'>
                         {!showApiData ? <Spinner color='default' /> : ""}
-                        <p className='text-4xl font-mono text-white'>{searchParams.topic.charAt(0).toUpperCase() + searchParams.topic.slice(1)}</p>
+                        <p className='text-5xl text-white'>{searchParams.topic.charAt(0).toUpperCase() + searchParams.topic.slice(1)}</p>
                     </div>
                     <p className='text-[#9EA2A5] text-xs my-7'>
                         {!showApiData ? `Report will be generated in ${formatTime(timeRemaining)}` : ""}

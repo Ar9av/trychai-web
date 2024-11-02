@@ -5,6 +5,10 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import 'github-markdown-css';
 import jsPDF from 'jspdf';
+import ShareIcon from '@mui/icons-material/Share';
+import DownloadIcon from '@mui/icons-material/Download';
+import { IconButton} from '@mui/material';
+
 import { MuiMarkdown, getOverrides } from 'mui-markdown';
 
 function customSplitTextToSize(doc, textContent, pageWidth, margin, widthOccupied) {
@@ -86,6 +90,13 @@ const CustomP = (props) => (
   </p>
 );
 
+const lineHeightMap = {
+  HEADER: { size: 16 * 1.2, lineHeight: 16 * 1.2 * 1.2, style: 'bold' },
+  H1: { size: 16 * 1.2, lineHeight: 16 * 1.2 * 1.2, style: 'bold' },
+  H2: { size: 14 * 1.2, lineHeight: 14 * 1.2 * 1.2, style: 'bold' },
+  H3: { size: 12 * 1.2, lineHeight: 12 * 1.2 * 1.2, style: 'bold' },
+  P: { size: 10 * 1.2, lineHeight: 10 * 1.2 * 1.2, style: 'normal' },
+};
 
 const ApiData = ({ apiData }) => {
   const [loading, setLoading] = useState(false);
@@ -111,7 +122,7 @@ const ApiData = ({ apiData }) => {
       const pageWidth = doc.internal.pageSize.width;
       const margin = 10;
       let yPosition = 10;
-      const lineHeightMap = { H1: 16 * 1.2, H2: 14 * 1.2, H3: 12 * 1.2 };
+      // const lineHeightMap = { H1: 16 * 1.2, H2: 14 * 1.2, H3: 12 * 1.2 };
 
       const element = document.getElementById('api-data-container');
       const nodes = extractTextContent(element);
@@ -125,18 +136,18 @@ const ApiData = ({ apiData }) => {
 
         const parentElement = node.parentNode;
         const style = window.getComputedStyle(parentElement);
-        const fontSize = lineHeightMap[parentElement.nodeName] || 10 * 1.2;
         const fontFamily = style.fontFamily;
+        const tagName = parentElement.nodeName.toUpperCase();
+        const { size: fontSize, lineHeight: lineHeight, style: fontStyle } = lineHeightMap[tagName] || lineHeightMap.P;
         
-
-        doc.setFont(fontFamily);
+        doc.setFont(fontStyle);
         doc.setFontSize(fontSize);
+        console.log("fontsize", fontSize)
 
         if (parentElement.nodeName.toLowerCase() === 'a') {
-          console.log("entered")
           const url = parentElement.getAttribute('href');
           doc.setTextColor(0, 0, 255);
-          const lineHeight = Math.floor(fontSize);
+          const lineHeight = fontSize === 12 ? 7 : Math.floor(fontSize);
           const fullText = textContent;
           const textWidth = doc.getTextWidth(fullText);
           if (textWidth < (pageWidth - margin - width_occupied)) {
@@ -153,7 +164,7 @@ const ApiData = ({ apiData }) => {
           }
           prev_element_is_a = true;
         } else {
-
+          const lineHeight = fontSize === 12 ? 7 : Math.floor(fontSize);
           const textLines = customSplitTextToSize(doc, textContent, pageWidth, margin, width_occupied)
           textLines.forEach((line) => {
             if ((doc.getTextWidth(line) < pageWidth - margin - width_occupied) && prev_element_is_a) {
@@ -164,8 +175,8 @@ const ApiData = ({ apiData }) => {
             }
             else{
             width_occupied = margin;
-            yPosition += fontSize;
-            if (yPosition + fontSize > pageHeight - margin) {
+            yPosition += lineHeight;
+            if (yPosition + lineHeight > pageHeight - margin) {
               doc.addPage();
               yPosition = margin;
             }
@@ -201,7 +212,17 @@ const ApiData = ({ apiData }) => {
   })();
 
   return (
+    
     <div id="api-data-container" className="relative flex flex-col w-full h-full">
+      <div className="absolute top-4 right-4 flex space-x-2">
+        <IconButton aria-label="share" onClick={() => {console.log("1")}}>
+          <ShareIcon />
+        </IconButton>
+        
+        <IconButton aria-label="download" onClick={() => handleExport('export.pdf')}>
+          <DownloadIcon />
+        </IconButton>
+      </div>
       <div className="flex-1 overflow-y-auto p-4">
         <MuiMarkdown
           overrides={{
@@ -223,15 +244,6 @@ const ApiData = ({ apiData }) => {
         >
           {markdownContent}
         </MuiMarkdown>
-      </div>
-      <div className="p-4 flex justify-end">
-        <button
-          onClick={() => handleExport('export.pdf')}
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
-        >
-          {loading ? 'Generating PDF...' : 'Export to PDF'}
-        </button>
       </div>
     </div>
   );
