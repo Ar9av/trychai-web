@@ -138,7 +138,7 @@ export default function Pricing() {
                     className="w-full"  
                     variant="solid"  
                     color={item.isMostPop ? "primary" : "default"}  
-                    onClick={() => router.push('/chatBox')}
+                    onClick={() => router.push('/create')}
                   >  
                     Get Started  
                   </Button>  

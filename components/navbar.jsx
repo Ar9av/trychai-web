@@ -91,7 +91,7 @@ export default function NavBar({ showNewReport = false, onToggleSidebar }) {
               <Button
                 as={Link}
                 color="primary"
-                href="/chatBox"
+                href="/create"
                 variant="solid"
                 className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
               >
