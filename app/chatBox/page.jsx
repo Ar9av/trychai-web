@@ -320,7 +320,7 @@ const Page = () => {
             onClick={() => handleExampleClick("Germany's Beer Industry")} 
             className='text-xs'
           >
-            Germany's Beer Industry
+            Germany`&apos`s Beer Industry
           </Button>
           <Button 
             variant="contained" 
