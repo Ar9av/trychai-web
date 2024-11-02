@@ -89,7 +89,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         </IconButton>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 2 }}>
-        <Link href='/chatBox' passHref>
+        <Link href='/create' passHref>
           <Button variant="outlined" startIcon={<BiChat size={20} />} fullWidth>
             New Report
           </Button>

@@ -32,7 +32,7 @@ const Page = () => {
         const provider = new GoogleAuthProvider();
         try {
             await signInWithPopup(auth, provider);
-            router.push('/chatBox')
+            router.push('/create')
         }
         catch (error) {
             console.log("Error SignIn", error.message)
@@ -42,7 +42,7 @@ const Page = () => {
         <div>
             {
                 user ? (
-                    router.push('/chatBox')
+                    router.push('/create')
                 )
                     :
                     (
@@ -80,7 +80,7 @@ const Page = () => {
                                     <div className="text-right mb-2">
                                         <a href="#" className="text-gray-400 hover:underline">Forgot Password?</a>
                                     </div>
-                                    <Link href='chatBox'>
+                                    <Link href='create'>
                                         <button
                                             type="submit"
                                             className="w-full py-2 mb-4 text-white font-semibold delay-75 hover:-translate-y-1 transition ease-in-out bg-[#7083cf] hover:bg-[#784e76] rounded"

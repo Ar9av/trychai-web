@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router'; // Updated import
 import Link from "next/link";
+import Head from 'next/head';
 import { CircularProgress, Typography } from '@mui/material';
 import NavBar from '@/components/navbar';
 import Sidebar from '@/components/sidebar';
@@ -50,6 +51,9 @@ const Report = ({ params }) => {
 
     return (
         <ThemeProvider theme={darkTheme}>
+            <Head>
+                <title>{title || 'Loading...'}</title>
+            </Head>
             <div style={{ height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
                 <Sidebar isOpen={false} onClose={() => {}} />
                 <div className="flex flex-col items-center flex-grow transition-all duration-300 ml-8 overflow-auto">
@@ -76,20 +80,5 @@ const Report = ({ params }) => {
         </ThemeProvider>
     );
 };
-
-// export async function getStaticPaths() {
-//     return {
-//         paths: [],
-//         fallback: 'blocking',
-//     };
-// }
-
-// export async function getStaticProps(context) {
-//     return {
-//         props: {
-//             params: context.params,
-//         },
-//     };
-// }
 
 export default Report;
