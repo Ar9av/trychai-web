@@ -2,13 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { IoIosClose } from "react-icons/io";
 import { HiOutlineClipboardDocumentList } from "react-icons/hi2";
-import { LuUser } from "react-icons/lu";
-import { Button } from '@nextui-org/react';
+import { Button, IconButton, Drawer, List, ListItem, ListItemText, ListItemIcon, Divider, Box, Typography } from '@mui/material';
 import { BiChat } from "react-icons/bi";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useClerk } from '@clerk/clerk-react';
 import { usePathname } from 'next/navigation'
+import { ThemeProvider } from '@mui/material/styles';
+import darkTheme from '../theme'; 
 
 const Sidebar = ({ isOpen, onClose }) => {
   const [previousReports, setPreviousReports] = useState([]);
@@ -71,45 +72,49 @@ const Sidebar = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div
-      className={`fixed top-0 left-0 h-full w-[250px] bg-black text-white shadow-lg transform ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out z-50`}
+    <ThemeProvider theme={darkTheme}>
+    <Drawer
+      anchor="left"
+      open={isOpen}
+      onClose={onClose}
+      PaperProps={{ style: { width: 250, backgroundColor: '#000', color: '#fff' } }}
     >
-      <div className="flex justify-between items-center p-4 border-b border-gray-700">
-        <div className='flex gap-3 items-center justify-center'>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid #444' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <HiOutlineClipboardDocumentList size={30} />
-          <h2 className="text-lg font-semibold">Reports</h2>
-        </div>
-        <button onClick={onClose} className="hover:bg-gray-700 rounded-full p-1 transition-colors duration-200">
+          <Typography variant="h6">Reports</Typography>
+        </Box>
+        <IconButton onClick={onClose} sx={{ color: '#fff' }}>
           <IoIosClose size={24} />
-        </button>
-      </div>
-      <div className='flex justify-center items-center mt-4 mb-6'>
-        <Link href='/chatBox' className='w-[90%]'>
-          <Button className='w-full' variant="bordered" startContent={<BiChat size={20} />}>
+        </IconButton>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 2 }}>
+        <Link href='/chatBox' passHref>
+          <Button variant="outlined" startIcon={<BiChat size={20} />} fullWidth>
             New Report
           </Button>
         </Link>
-      </div>
-      <div className="overflow-y-auto h-full" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-        {previousReports.map((item, index) => (
-          <div
-            key={index}
-            className='mt-2 mx-2 px-4 py-3 rounded-md bg-[#27282A] cursor-pointer hover:bg-[#323335] transition-colors duration-200'
-            onClick={() => handleHistoryClick(item.payload)}
-            title={item.title}
-          >
-            <p className='text-sm truncate'>{item.title}</p>
-            <p className='text-xs text-gray-400'>{formatTimestamp(item.created_at)}</p>
-          </div>
-        ))}
-      </div>
-      {/* <div className='absolute bottom-5 left-0 right-0 flex items-center justify-start px-4 py-2 bg-[#1c1c1e]'>
-        <LuUser size={24} className="mr-4" />
-        <h1 className="text-sm font-medium">Report History</h1>
-      </div> */}
-    </div>
+      </Box>
+      <Divider />
+      <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+        <List>
+          {previousReports.map((item, index) => (
+            <ListItem
+              button
+              key={index}
+              onClick={() => handleHistoryClick(item.payload)}
+              sx={{ bgcolor: '#27282A', my: 1, borderRadius: 2, '&:hover': { bgcolor: '#323335' } }}
+            >
+              <ListItemText
+                primary={<Typography variant="body2" noWrap>{item.title}</Typography>}
+                secondary={<Typography variant="caption" color="textSecondary">{formatTimestamp(item.created_at)}</Typography>}
+              />
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+    </Drawer>
+    </ThemeProvider >
   );
 };
 

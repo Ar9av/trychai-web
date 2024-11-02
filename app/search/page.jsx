@@ -12,6 +12,14 @@ import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firesto
 import { useClerk } from "@clerk/nextjs";
 import NavBar from '@/components/navbar';
 import { toast } from 'react-toastify';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+    },
+});
 
 const Page = () => {
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
@@ -186,7 +194,8 @@ const Page = () => {
     };
 
     return (
-        <div style={{ overflow: 'hidden', height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
+        <ThemeProvider theme={darkTheme}>
+        <div style={{ height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
             <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
             {!isMobile && (
                 <button
@@ -196,15 +205,10 @@ const Page = () => {
                     {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
                 </button>
             )}
-            <div
-                className={`flex flex-col items-center flex-grow transition-all duration-300 ${
-                    isMobile 
-                    ? 'ml-0' // Always 0 margin on mobile
-                    : isSidebarOpen 
-                        ? 'ml-72' 
-                        : 'ml-8'
-                }`}
-            >
+            <div className={`flex flex-col items-center flex-grow transition-all duration-300 
+                ${isMobile ? 'ml-0' : isSidebarOpen ? 'ml-72' : 'ml-8'}
+                overflow-auto
+                `}>
                 <NavBar onToggleSidebar={toggleSidebar} />
                 {/* <div className="border-2 w-3/4 border-transparent my-6"></div> */}
                 <div className='w-full'>
@@ -237,6 +241,7 @@ const Page = () => {
                 </div>
             </div>
         </div>
+        </ThemeProvider>
     );
 };
 

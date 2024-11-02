@@ -1,102 +1,174 @@
-// components/apiData.jsx
-'use client'
-import React, { useEffect, useState } from 'react';
-import Sources from './sources';
+'use client';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import 'github-markdown-css';
+import jsPDF from 'jspdf';
+import { MuiMarkdown, getOverrides } from 'mui-markdown';
+
+const CustomH1 = (props) => (
+  <header style={{ fontSize: '35px', padding: '20px 0' }}>
+    <hr style={{ border: '1px solid white', margin: '20px 0' }} />
+    {props.children}
+  </header>
+);
+
+const CustomH2 = (props) => (
+  <header style={{ fontSize: '30px', padding: '10px 0' }}>
+    {props.children}
+  </header>
+);
+
+const CustomH3 = (props) => (
+  <header style={{ fontSize: '20px', padding: '10px 0' }}>
+    {props.children}
+  </header>
+);
+
+const CustomP = (props) => (
+  <p style={{ fontSize: '16px', lineHeight: '1.5', padding: '10px 0' }}>
+    {props.children}
+  </p>
+);
+
 
 const ApiData = ({ apiData }) => {
-  const [isCollapsed, setIsCollapsed] = useState(window.innerWidth < 768);
+  const [loading, setLoading] = useState(false);
 
-  const toggleCollapse = () => {
-    setIsCollapsed((prev) => !prev);
-  };
+  const extractTextContent = (element) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let node;
+    const textNodes = [];
+    while (node = walker.nextNode()) {
+      if (node.nodeType === Node.TEXT_NODE || node.nodeName.toLowerCase() === 'a') {
+        // if (parentElement.nodeName.toLowerCase() === 'a') {
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsCollapsed(true);
+        textNodes.push(node);
       }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  const components = {
-    // Headers
-    ch1: ({node, ...props}) => <h1 className="font-mono text-3xl mb-4 text-center" {...props} />,
-    h1: ({node, ...props}) => <h1 className="font-mono text-3xl mb-4" {...props} />,
-    h2: ({node, ...props}) => <h2 className="font-sans text-2xl mb-3 pl-4" {...props} />,
-    h3: ({node, ...props}) => <h3 className="font-sans text-xl mb-2 pl-6" {...props} />,
-    
-    // Paragraphs
-    p: ({node, ...props}) => <p className="font-sans mb-4" {...props} />,
-    
-    // Lists
-    ul: ({node, ...props}) => <ul className="font-sans list-disc ml-6 mb-4" {...props} />,
-    ol: ({node, ...props}) => <ol className="font-sans list-decimal ml-6 mb-4" {...props} />,
-    
-    // Inline elements
-    strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
-    em: ({node, ...props}) => <em className="italic" {...props} />,
-    
-    // Code blocks
-    code: ({node, inline, ...props}) => 
-      inline ? 
-        <code className="font-mono bg-gray-100 px-1 rounded" {...props} /> :
-        <code className="font-mono block bg-gray-100 p-4 rounded mb-4" {...props} />
+    }
+    return textNodes;
   };
+
+  const handleExport = async (fileName) => {
+    setLoading(true);
+    try {
+      const doc = new jsPDF();
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      const margin = 10;
+      let yPosition = margin;
+      const lineHeightMap = { H1: 16 * 1.2, H2: 14 * 1.2, H3: 12 * 1.2 };
+
+      const element = document.querySelector('div.w-full');
+      const nodes = extractTextContent(element);
+      // console.log(nodes)
+      // console.log(" nnode:", nodes)     
+      const width_occupied = 10 
+
+      nodes.forEach((node) => {
+        const textContent = node.textContent.trim();
+        if (!textContent) return;
+
+        const parentElement = node.parentNode;
+        const style = window.getComputedStyle(parentElement);
+        const fontSize = lineHeightMap[parentElement.nodeName] || 10 * 1.2;
+        const fontFamily = style.fontFamily;
+
+        doc.setFont(fontFamily);
+        doc.setFontSize(fontSize);
+
+        // Process links differently
+        if (parentElement.nodeName.toLowerCase() === 'a') {
+          console.log("entered")
+          const url = parentElement.getAttribute('href');
+          doc.setTextColor(0, 0, 255);
+          const lineHeight = Math.floor(fontSize);
+          // if (yPosition + lineHeight > pageHeight - margin) {
+          //   doc.addPage();
+          //   yPosition = margin;
+          // }
+          doc.textWithLink(textContent, margin, yPosition, { url });
+          // const lines = doc.splitTextToSize(textContent, pageWidth - margin * 2);
+
+          // lines.forEach((line) => {
+          //   if (yPosition + lineHeight > pageHeight - margin) {
+          //     doc.addPage();
+          //     yPosition = margin;
+          //   }
+          //   doc.textWithLink(line, margin, yPosition, { url });
+          //   yPosition += lineHeight;
+          // });
+        } else {
+          // Handle regular text
+          const textLines = doc.splitTextToSize(textContent, pageWidth - margin * 2);
+          textLines.forEach((line) => {
+            if (yPosition + fontSize > pageHeight - margin) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.setTextColor(0, 0, 0);
+            doc.text(line, margin, yPosition);
+            yPosition += fontSize;
+          });
+        }
+
+        if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(parentElement.nodeName)) {
+          yPosition += fontSize;
+        }
+      });
+
+      doc.save(fileName || 'export.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert(`Failed to export PDF: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markdownContent = (() => {
+    try {
+      const parsedBody = JSON.parse(apiData.body);
+      return parsedBody.summary || apiData.body;
+    } catch {
+      return apiData.body;
+    }
+  })();
 
   return (
-    <div className='relative flex w-full' style={{ height: '100vh' }}>
-      <div className={`transition-all duration-500 w-full overflow-y-auto h-full ${window.innerWidth >= 768 ? 'p-4' : ''}`}>
-        <ReactMarkdown
-          className='markdown-body'
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw]}
-          components={components}
+    <div className="relative flex flex-col w-full h-full">
+      <div className="flex-1 overflow-y-auto p-4">
+        <MuiMarkdown
+          overrides={{
+            ...getOverrides({}),
+            h1: {
+              component: CustomH1,
+            },
+            h2: {
+              component: CustomH2,
+            },
+            h3: {
+              component: CustomH3,
+            },
+            p: {
+              component: CustomP,
+            },
+          }}
+          className="markdown-body"
         >
-          {(() => {
-            try {
-              const parsedBody = JSON.parse(apiData.body);
-              return `${parsedBody.summary || apiData.body}`;
-            } catch (error) {
-              return `${apiData.body}`;
-            }
-          })()}
-          
-        </ReactMarkdown>
-      <div className='my-64'>
-        <hr />
-        <hr />
-        <hr />
-        <hr />
-        <hr />
-        
+          {markdownContent}
+        </MuiMarkdown>
       </div>
+      <div className="p-4 flex justify-end">
+        <button
+          onClick={() => handleExport('export.pdf')}
+          disabled={loading}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+        >
+          {loading ? 'Generating PDF...' : 'Export to PDF'}
+        </button>
       </div>
-
-      {/* <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
-        {!isCollapsed && apiData.sources && <Sources data={apiData.sources} />}
-      </div> */}
-
-      {/* <button
-        onClick={toggleCollapse}
-        className='absolute top-1/2 transform -translate-y-1/2 right-0 p-2 bg-blue-500 text-white rounded-l flex items-center justify-center'>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          className={`w-6 h-6 transition-transform ${isCollapsed ? 'rotate-180' : 'rotate-0'}`}>
-          <path strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d={isCollapsed ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
-        </svg>
-      </button> */}
     </div>
   );
 };
