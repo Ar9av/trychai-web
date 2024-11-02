@@ -7,6 +7,60 @@ import 'github-markdown-css';
 import jsPDF from 'jspdf';
 import { MuiMarkdown, getOverrides } from 'mui-markdown';
 
+function customSplitTextToSize(doc, textContent, pageWidth, margin, widthOccupied) {
+  // Calculate the widths
+  const availableWidthFirstLine = pageWidth - margin * 2 - widthOccupied;
+  const availableWidthOtherLines = pageWidth - margin * 2;
+
+  // Initialize variables
+  let lines = [];
+  let currentLine = '';
+  let isFirstLine = true;
+
+  // Split the text content into segments by newline
+  const segments = textContent.split('\n');
+
+  segments.forEach(segment => {
+      // Split each segment into words
+      const words = segment.split(' ');
+
+      // Loop through words and construct lines
+      words.forEach(word => {
+          // Determine the available width for the current line
+          const currentAvailableWidth = isFirstLine ? availableWidthFirstLine : availableWidthOtherLines;
+
+          // Check if adding the word would exceed the available width
+          const widthAfterAddingWord = doc.getStringUnitWidth(currentLine === '' ? word : currentLine + ' ' + word) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+          if (widthAfterAddingWord <= currentAvailableWidth) {
+              // Add the word to the current line
+              if (currentLine.length > 0) {
+                  currentLine += ' ';
+              }
+              currentLine += word;
+          } else {
+              // Push the current line to the array of lines
+              lines.push(currentLine);
+              // Start a new line with the current word
+              currentLine = word;
+              // Subsequent lines should use the other lines width
+              isFirstLine = false;
+          }
+      });
+
+      // After processing each segment, push the current line to the lines and reset it
+      lines.push(currentLine);
+      currentLine = '';
+      isFirstLine = false;
+  });
+
+  // In case there's any leftover text in the current line, push it to the lines
+  if (currentLine.length > 0) {
+      lines.push(currentLine);
+  }
+
+  return lines;
+}
+
 const CustomH1 = (props) => (
   <header style={{ fontSize: '35px', padding: '20px 0' }}>
     <hr style={{ border: '1px solid white', margin: '20px 0' }} />
@@ -42,13 +96,12 @@ const ApiData = ({ apiData }) => {
     const textNodes = [];
     while (node = walker.nextNode()) {
       if (node.nodeType === Node.TEXT_NODE || node.nodeName.toLowerCase() === 'a') {
-        // if (parentElement.nodeName.toLowerCase() === 'a') {
-
         textNodes.push(node);
       }
     }
     return textNodes;
   };
+  
 
   const handleExport = async (fileName) => {
     setLoading(true);
@@ -57,14 +110,14 @@ const ApiData = ({ apiData }) => {
       const pageHeight = doc.internal.pageSize.height;
       const pageWidth = doc.internal.pageSize.width;
       const margin = 10;
-      let yPosition = margin;
+      let yPosition = 10;
       const lineHeightMap = { H1: 16 * 1.2, H2: 14 * 1.2, H3: 12 * 1.2 };
 
-      const element = document.querySelector('div.w-full');
+      const element = document.getElementById('api-data-container');
       const nodes = extractTextContent(element);
-      // console.log(nodes)
-      // console.log(" nnode:", nodes)     
-      const width_occupied = 10 
+    
+      let width_occupied = 10 
+      let prev_element_is_a = false;
 
       nodes.forEach((node) => {
         const textContent = node.textContent.trim();
@@ -74,48 +127,59 @@ const ApiData = ({ apiData }) => {
         const style = window.getComputedStyle(parentElement);
         const fontSize = lineHeightMap[parentElement.nodeName] || 10 * 1.2;
         const fontFamily = style.fontFamily;
+        
 
         doc.setFont(fontFamily);
         doc.setFontSize(fontSize);
 
-        // Process links differently
         if (parentElement.nodeName.toLowerCase() === 'a') {
           console.log("entered")
           const url = parentElement.getAttribute('href');
           doc.setTextColor(0, 0, 255);
           const lineHeight = Math.floor(fontSize);
-          // if (yPosition + lineHeight > pageHeight - margin) {
-          //   doc.addPage();
-          //   yPosition = margin;
-          // }
-          doc.textWithLink(textContent, margin, yPosition, { url });
-          // const lines = doc.splitTextToSize(textContent, pageWidth - margin * 2);
-
-          // lines.forEach((line) => {
-          //   if (yPosition + lineHeight > pageHeight - margin) {
-          //     doc.addPage();
-          //     yPosition = margin;
-          //   }
-          //   doc.textWithLink(line, margin, yPosition, { url });
-          //   yPosition += lineHeight;
-          // });
+          const fullText = textContent;
+          const textWidth = doc.getTextWidth(fullText);
+          if (textWidth < (pageWidth - margin - width_occupied)) {
+            doc.textWithLink(fullText, width_occupied + 1, yPosition, { url });
+            width_occupied += textWidth + 1;
+          } else {
+            yPosition += lineHeight;
+            if (yPosition + lineHeight > pageHeight - margin) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.textWithLink(fullText, margin, yPosition, { url });
+            width_occupied += textWidth;
+          }
+          prev_element_is_a = true;
         } else {
-          // Handle regular text
-          const textLines = doc.splitTextToSize(textContent, pageWidth - margin * 2);
+
+          const textLines = customSplitTextToSize(doc, textContent, pageWidth, margin, width_occupied)
           textLines.forEach((line) => {
+            if ((doc.getTextWidth(line) < pageWidth - margin - width_occupied) && prev_element_is_a) {
+              doc.setTextColor(0, 0, 0);
+              doc.text(line, width_occupied, yPosition);
+              width_occupied += doc.getTextWidth(line);
+              prev_element_is_a = false;
+            }
+            else{
+            width_occupied = margin;
+            yPosition += fontSize;
             if (yPosition + fontSize > pageHeight - margin) {
               doc.addPage();
               yPosition = margin;
             }
             doc.setTextColor(0, 0, 0);
-            doc.text(line, margin, yPosition);
-            yPosition += fontSize;
+            doc.text(line, width_occupied, yPosition);
+            width_occupied += doc.getTextWidth(line);
+            prev_element_is_a = false;
+          }
           });
         }
 
-        if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(parentElement.nodeName)) {
-          yPosition += fontSize;
-        }
+        // if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(parentElement.nodeName)) {
+        //   yPosition += fontSize;
+        // }
       });
 
       doc.save(fileName || 'export.pdf');
@@ -137,7 +201,7 @@ const ApiData = ({ apiData }) => {
   })();
 
   return (
-    <div className="relative flex flex-col w-full h-full">
+    <div id="api-data-container" className="relative flex flex-col w-full h-full">
       <div className="flex-1 overflow-y-auto p-4">
         <MuiMarkdown
           overrides={{
