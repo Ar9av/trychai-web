@@ -7,7 +7,8 @@ import 'github-markdown-css';
 import jsPDF from 'jspdf';
 import ShareIcon from '@mui/icons-material/Share';
 import DownloadIcon from '@mui/icons-material/Download';
-import { IconButton} from '@mui/material';
+import { IconButton, Snackbar } from '@mui/material';
+import MuiAlert from '@mui/material/Alert';
 
 import { MuiMarkdown, getOverrides } from 'mui-markdown';
 
@@ -25,41 +26,41 @@ function customSplitTextToSize(doc, textContent, pageWidth, margin, widthOccupie
   const segments = textContent.split('\n');
 
   segments.forEach(segment => {
-      // Split each segment into words
-      const words = segment.split(' ');
+    // Split each segment into words
+    const words = segment.split(' ');
 
-      // Loop through words and construct lines
-      words.forEach(word => {
-          // Determine the available width for the current line
-          const currentAvailableWidth = isFirstLine ? availableWidthFirstLine : availableWidthOtherLines;
+    // Loop through words and construct lines
+    words.forEach(word => {
+      // Determine the available width for the current line
+      const currentAvailableWidth = isFirstLine ? availableWidthFirstLine : availableWidthOtherLines;
 
-          // Check if adding the word would exceed the available width
-          const widthAfterAddingWord = doc.getStringUnitWidth(currentLine === '' ? word : currentLine + ' ' + word) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-          if (widthAfterAddingWord <= currentAvailableWidth) {
-              // Add the word to the current line
-              if (currentLine.length > 0) {
-                  currentLine += ' ';
-              }
-              currentLine += word;
-          } else {
-              // Push the current line to the array of lines
-              lines.push(currentLine);
-              // Start a new line with the current word
-              currentLine = word;
-              // Subsequent lines should use the other lines width
-              isFirstLine = false;
-          }
-      });
+      // Check if adding the word would exceed the available width
+      const widthAfterAddingWord = doc.getStringUnitWidth(currentLine === '' ? word : currentLine + ' ' + word) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+      if (widthAfterAddingWord <= currentAvailableWidth) {
+        // Add the word to the current line
+        if (currentLine.length > 0) {
+          currentLine += ' ';
+        }
+        currentLine += word;
+      } else {
+        // Push the current line to the array of lines
+        lines.push(currentLine);
+        // Start a new line with the current word
+        currentLine = word;
+        // Subsequent lines should use the other lines width
+        isFirstLine = false;
+      }
+    });
 
-      // After processing each segment, push the current line to the lines and reset it
-      lines.push(currentLine);
-      currentLine = '';
-      isFirstLine = false;
+    // After processing each segment, push the current line to the lines and reset it
+    lines.push(currentLine);
+    currentLine = '';
+    isFirstLine = false;
   });
 
   // In case there's any leftover text in the current line, push it to the lines
   if (currentLine.length > 0) {
-      lines.push(currentLine);
+    lines.push(currentLine);
   }
 
   return lines;
@@ -98,8 +99,13 @@ const lineHeightMap = {
   P: { size: 10 * 1.2, lineHeight: 10 * 1.2 * 1.2, style: 'normal' },
 };
 
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
 const ApiData = ({ apiData }) => {
   const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const extractTextContent = (element) => {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
@@ -112,7 +118,6 @@ const ApiData = ({ apiData }) => {
     }
     return textNodes;
   };
-  
 
   const handleExport = async (fileName) => {
     setLoading(true);
@@ -122,11 +127,9 @@ const ApiData = ({ apiData }) => {
       const pageWidth = doc.internal.pageSize.width;
       const margin = 10;
       let yPosition = 10;
-      // const lineHeightMap = { H1: 16 * 1.2, H2: 14 * 1.2, H3: 12 * 1.2 };
-
       const element = document.getElementById('api-data-container');
       const nodes = extractTextContent(element);
-    
+
       let width_occupied = 10 
       let prev_element_is_a = false;
 
@@ -139,10 +142,9 @@ const ApiData = ({ apiData }) => {
         const fontFamily = style.fontFamily;
         const tagName = parentElement.nodeName.toUpperCase();
         const { size: fontSize, lineHeight: lineHeight, style: fontStyle } = lineHeightMap[tagName] || lineHeightMap.P;
-        
+
         doc.setFont(fontStyle);
         doc.setFontSize(fontSize);
-        console.log("fontsize", fontSize)
 
         if (parentElement.nodeName.toLowerCase() === 'a') {
           const url = parentElement.getAttribute('href');
@@ -173,24 +175,20 @@ const ApiData = ({ apiData }) => {
               width_occupied += doc.getTextWidth(line);
               prev_element_is_a = false;
             }
-            else{
-            width_occupied = margin;
-            yPosition += lineHeight;
-            if (yPosition + lineHeight > pageHeight - margin) {
-              doc.addPage();
-              yPosition = margin;
+            else {
+              width_occupied = margin;
+              yPosition += lineHeight;
+              if (yPosition + lineHeight > pageHeight - margin) {
+                doc.addPage();
+                yPosition = margin;
+              }
+              doc.setTextColor(0, 0, 0);
+              doc.text(line, width_occupied, yPosition);
+              width_occupied += doc.getTextWidth(line);
+              prev_element_is_a = false;
             }
-            doc.setTextColor(0, 0, 0);
-            doc.text(line, width_occupied, yPosition);
-            width_occupied += doc.getTextWidth(line);
-            prev_element_is_a = false;
-          }
           });
         }
-
-        // if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(parentElement.nodeName)) {
-        //   yPosition += fontSize;
-        // }
       });
 
       doc.save(fileName || 'export.pdf');
@@ -213,29 +211,30 @@ const ApiData = ({ apiData }) => {
 
   const md5 = (() => {
     try {
-      console.log(apiData)
       return apiData.payload_md5;
     } catch {
       return null;
     }
   })();
 
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
 
   return (
-    
     <div id="api-data-container" className="relative flex flex-col w-full h-full">
       <div className="absolute top-4 right-4 flex space-x-2">
         <IconButton aria-label="share" onClick={() => { 
           const link = window.location.href.includes('reports') ? window.location.href : `${window.location.origin}/reports/${md5}`; 
           navigator.clipboard.writeText(link).then(() => {
-            console.log("Link copied to clipboard:", link);
+            setSnackbarOpen(true);
           }).catch(err => {
             console.error("Failed to copy link:", err);
           });
         }}>
           <ShareIcon />
         </IconButton>
-        
+
         <IconButton aria-label="download" onClick={() => handleExport('export.pdf')}>
           <DownloadIcon />
         </IconButton>
@@ -262,6 +261,16 @@ const ApiData = ({ apiData }) => {
           {markdownContent}
         </MuiMarkdown>
       </div>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ backgroundColor: '#333', color: '#fff' }}>
+          Link copied to clipboard!
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
