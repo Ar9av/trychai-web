@@ -12,6 +12,14 @@ import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firesto
 import { useClerk } from "@clerk/nextjs";
 import NavBar from '@/components/navbar';
 import { toast } from 'react-toastify';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+    },
+});
 
 const Page = () => {
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
@@ -134,7 +142,6 @@ const Page = () => {
                 clearInterval(timerRef.current);
 
                 const data = JSON.parse(response.Payload);
-
                 return data;
             } catch (error) {
                 clearInterval(intervalRef.current);
@@ -148,6 +155,7 @@ const Page = () => {
         setTimeRemaining(4 * 60); // Reset timer to 4 minutes
         setShowApiData(false);
         let data = await fetchFromLambda();
+        console.log('data', data)
         if (data) {
             setApiData(data);
             setShowApiData(true);
@@ -186,7 +194,8 @@ const Page = () => {
     };
 
     return (
-        <div style={{ overflow: 'hidden', height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
+        <ThemeProvider theme={darkTheme}>
+        <div style={{ height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
             <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
             {!isMobile && (
                 <button
@@ -196,21 +205,16 @@ const Page = () => {
                     {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
                 </button>
             )}
-            <div
-                className={`flex flex-col items-center flex-grow transition-all duration-300 ${
-                    isMobile 
-                    ? 'ml-0' // Always 0 margin on mobile
-                    : isSidebarOpen 
-                        ? 'ml-72' 
-                        : 'ml-8'
-                }`}
-            >
+            <div className={`flex flex-col items-center flex-grow transition-all duration-300 
+                ${isMobile ? 'ml-0' : isSidebarOpen ? 'ml-72' : 'ml-8'}
+                overflow-auto
+                `}>
                 <NavBar onToggleSidebar={toggleSidebar} />
-                <div className="border-2 w-3/4 border-transparent my-6"></div>
+                {/* <div className="border-2 w-3/4 border-transparent my-6"></div> */}
                 <div className='w-full'>
-                    <div className='flex gap-5 items-center w-full'>
+                    <div className='flex gap-5 items-center justify-center w-full'>
                         {!showApiData ? <Spinner color='default' /> : ""}
-                        <p className='text-2xl font-semibold text-white'>{searchParams.topic}</p>
+                        <p className='text-5xl text-white'>{searchParams.topic.charAt(0).toUpperCase() + searchParams.topic.slice(1)}</p>
                     </div>
                     <p className='text-[#9EA2A5] text-xs my-7'>
                         {!showApiData ? `Report will be generated in ${formatTime(timeRemaining)}` : ""}
@@ -237,6 +241,7 @@ const Page = () => {
                 </div>
             </div>
         </div>
+        </ThemeProvider>
     );
 };
 

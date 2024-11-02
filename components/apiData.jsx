@@ -1,77 +1,276 @@
-// components/apiData.jsx
-'use client'
-import React, { useEffect, useState } from 'react';
-import Sources from './sources';
+'use client';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import 'github-markdown-css';
+import jsPDF from 'jspdf';
+import ShareIcon from '@mui/icons-material/Share';
+import DownloadIcon from '@mui/icons-material/Download';
+import { IconButton, Snackbar } from '@mui/material';
+import MuiAlert from '@mui/material/Alert';
+
+import { MuiMarkdown, getOverrides } from 'mui-markdown';
+
+function customSplitTextToSize(doc, textContent, pageWidth, margin, widthOccupied) {
+  // Calculate the widths
+  const availableWidthFirstLine = pageWidth - margin * 2 - widthOccupied;
+  const availableWidthOtherLines = pageWidth - margin * 2;
+
+  // Initialize variables
+  let lines = [];
+  let currentLine = '';
+  let isFirstLine = true;
+
+  // Split the text content into segments by newline
+  const segments = textContent.split('\n');
+
+  segments.forEach(segment => {
+    // Split each segment into words
+    const words = segment.split(' ');
+
+    // Loop through words and construct lines
+    words.forEach(word => {
+      // Determine the available width for the current line
+      const currentAvailableWidth = isFirstLine ? availableWidthFirstLine : availableWidthOtherLines;
+
+      // Check if adding the word would exceed the available width
+      const widthAfterAddingWord = doc.getStringUnitWidth(currentLine === '' ? word : currentLine + ' ' + word) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+      if (widthAfterAddingWord <= currentAvailableWidth) {
+        // Add the word to the current line
+        if (currentLine.length > 0) {
+          currentLine += ' ';
+        }
+        currentLine += word;
+      } else {
+        // Push the current line to the array of lines
+        lines.push(currentLine);
+        // Start a new line with the current word
+        currentLine = word;
+        // Subsequent lines should use the other lines width
+        isFirstLine = false;
+      }
+    });
+
+    // After processing each segment, push the current line to the lines and reset it
+    lines.push(currentLine);
+    currentLine = '';
+    isFirstLine = false;
+  });
+
+  // In case there's any leftover text in the current line, push it to the lines
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+const CustomH1 = (props) => (
+  <header style={{ fontSize: '35px', padding: '20px 0' }}>
+    <hr style={{ border: '1px solid white', margin: '20px 0' }} />
+    {props.children}
+  </header>
+);
+
+const CustomH2 = (props) => (
+  <header style={{ fontSize: '30px', padding: '10px 0' }}>
+    {props.children}
+  </header>
+);
+
+const CustomH3 = (props) => (
+  <header style={{ fontSize: '20px', padding: '10px 0' }}>
+    {props.children}
+  </header>
+);
+
+const CustomP = (props) => (
+  <p style={{ fontSize: '16px', lineHeight: '1.5', padding: '10px 0' }}>
+    {props.children}
+  </p>
+);
+
+const lineHeightMap = {
+  HEADER: { size: 16 * 1.2, lineHeight: 16 * 1.2 * 1.2, style: 'bold' },
+  H1: { size: 16 * 1.2, lineHeight: 16 * 1.2 * 1.2, style: 'bold' },
+  H2: { size: 14 * 1.2, lineHeight: 14 * 1.2 * 1.2, style: 'bold' },
+  H3: { size: 12 * 1.2, lineHeight: 12 * 1.2 * 1.2, style: 'bold' },
+  P: { size: 10 * 1.2, lineHeight: 10 * 1.2 * 1.2, style: 'normal' },
+};
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const ApiData = ({ apiData }) => {
-  const [isCollapsed, setIsCollapsed] = useState(window.innerWidth < 768);
+  const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  const toggleCollapse = () => {
-    setIsCollapsed((prev) => !prev);
+  const extractTextContent = (element) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let node;
+    const textNodes = [];
+    while (node = walker.nextNode()) {
+      if (node.nodeType === Node.TEXT_NODE || node.nodeName.toLowerCase() === 'a') {
+        textNodes.push(node);
+      }
+    }
+    return textNodes;
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsCollapsed(true);
-      }
-    };
+  const handleExport = async (fileName) => {
+    setLoading(true);
+    try {
+      const doc = new jsPDF();
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      const margin = 10;
+      let yPosition = 10;
+      const element = document.getElementById('api-data-container');
+      const nodes = extractTextContent(element);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+      let width_occupied = 10 
+      let prev_element_is_a = false;
+
+      nodes.forEach((node) => {
+        const textContent = node.textContent.trim();
+        if (!textContent) return;
+
+        const parentElement = node.parentNode;
+        const style = window.getComputedStyle(parentElement);
+        const fontFamily = style.fontFamily;
+        const tagName = parentElement.nodeName.toUpperCase();
+        const { size: fontSize, lineHeight: lineHeight, style: fontStyle } = lineHeightMap[tagName] || lineHeightMap.P;
+
+        doc.setFont(fontStyle);
+        doc.setFontSize(fontSize);
+
+        if (parentElement.nodeName.toLowerCase() === 'a') {
+          const url = parentElement.getAttribute('href');
+          doc.setTextColor(0, 0, 255);
+          const lineHeight = fontSize === 12 ? 7 : Math.floor(fontSize);
+          const fullText = textContent;
+          const textWidth = doc.getTextWidth(fullText);
+          if (textWidth < (pageWidth - margin - width_occupied)) {
+            doc.textWithLink(fullText, width_occupied + 1, yPosition, { url });
+            width_occupied += textWidth + 1;
+          } else {
+            yPosition += lineHeight;
+            if (yPosition + lineHeight > pageHeight - margin) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.textWithLink(fullText, margin, yPosition, { url });
+            width_occupied += textWidth;
+          }
+          prev_element_is_a = true;
+        } else {
+          const lineHeight = fontSize === 12 ? 7 : Math.floor(fontSize);
+          const textLines = customSplitTextToSize(doc, textContent, pageWidth, margin, width_occupied)
+          textLines.forEach((line) => {
+            if ((doc.getTextWidth(line) < pageWidth - margin - width_occupied) && prev_element_is_a) {
+              doc.setTextColor(0, 0, 0);
+              doc.text(line, width_occupied, yPosition);
+              width_occupied += doc.getTextWidth(line);
+              prev_element_is_a = false;
+            }
+            else {
+              width_occupied = margin;
+              yPosition += lineHeight;
+              if (yPosition + lineHeight > pageHeight - margin) {
+                doc.addPage();
+                yPosition = margin;
+              }
+              doc.setTextColor(0, 0, 0);
+              doc.text(line, width_occupied, yPosition);
+              width_occupied += doc.getTextWidth(line);
+              prev_element_is_a = false;
+            }
+          });
+        }
+      });
+
+      doc.save(fileName || 'export.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert(`Failed to export PDF: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markdownContent = (() => {
+    try {
+      const parsedBody = JSON.parse(apiData.body);
+      return parsedBody.summary || apiData.body;
+    } catch {
+      return apiData.body;
+    }
+  })();
+
+  const md5 = (() => {
+    try {
+      return apiData.payload_md5;
+    } catch {
+      return null;
+    }
+  })();
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
 
   return (
-    <div className='relative flex w-full' style={{ height: '100vh' }}>
-      <div className={`transition-all duration-500 w-full overflow-y-auto h-full ${window.innerWidth >= 768 ? 'p-4' : ''}`}>
-        <ReactMarkdown
-          className='markdown-body'
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw]}
+    <div id="api-data-container" className="relative flex flex-col w-full h-full">
+      <div className="absolute top-4 right-4 flex space-x-2">
+        <IconButton aria-label="share" onClick={() => { 
+          const link = window.location.href.includes('reports') ? window.location.href : `${window.location.origin}/reports/${md5}`; 
+          navigator.clipboard.writeText(link).then(() => {
+            setSnackbarOpen(true);
+          }).catch(err => {
+            console.error("Failed to copy link:", err);
+          });
+        }}>
+          <ShareIcon />
+        </IconButton>
+
+        <IconButton aria-label="download" onClick={() => handleExport('export.pdf')}>
+          <DownloadIcon />
+        </IconButton>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        <MuiMarkdown
+          overrides={{
+            ...getOverrides({}),
+            h1: {
+              component: CustomH1,
+            },
+            h2: {
+              component: CustomH2,
+            },
+            h3: {
+              component: CustomH3,
+            },
+            p: {
+              component: CustomP,
+            },
+          }}
+          className="markdown-body"
         >
-          {(() => {
-            try {
-              const parsedBody = JSON.parse(apiData.body);
-              return `${parsedBody.summary || apiData.body}`;
-            } catch (error) {
-              return `${apiData.body}`;
-            }
-          })()}
-          
-        </ReactMarkdown>
-      <div className='my-64'>
-        <hr />
-        <hr />
-        <hr />
-        <hr />
-        <hr />
-        
+          {markdownContent}
+        </MuiMarkdown>
       </div>
-      </div>
-
-      {/* <div className={`transition-all duration-500 ${isCollapsed ? 'w-0' : 'w-[30%]'} overflow-y-auto h-full`}>
-        {!isCollapsed && apiData.sources && <Sources data={apiData.sources} />}
-      </div> */}
-
-      {/* <button
-        onClick={toggleCollapse}
-        className='absolute top-1/2 transform -translate-y-1/2 right-0 p-2 bg-blue-500 text-white rounded-l flex items-center justify-center'>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          className={`w-6 h-6 transition-transform ${isCollapsed ? 'rotate-180' : 'rotate-0'}`}>
-          <path strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d={isCollapsed ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
-        </svg>
-      </button> */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ backgroundColor: '#333', color: '#fff' }}>
+          Link copied to clipboard!
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
