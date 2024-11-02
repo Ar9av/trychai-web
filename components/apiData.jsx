@@ -211,11 +211,28 @@ const ApiData = ({ apiData }) => {
     }
   })();
 
+  const md5 = (() => {
+    try {
+      console.log(apiData)
+      return apiData.payload_md5;
+    } catch {
+      return null;
+    }
+  })();
+
+
   return (
     
     <div id="api-data-container" className="relative flex flex-col w-full h-full">
       <div className="absolute top-4 right-4 flex space-x-2">
-        <IconButton aria-label="share" onClick={() => {console.log("1")}}>
+        <IconButton aria-label="share" onClick={() => { 
+          const link = window.location.href.includes('reports') ? window.location.href : `${window.location.origin}/reports/${md5}`; 
+          navigator.clipboard.writeText(link).then(() => {
+            console.log("Link copied to clipboard:", link);
+          }).catch(err => {
+            console.error("Failed to copy link:", err);
+          });
+        }}>
           <ShareIcon />
         </IconButton>
         

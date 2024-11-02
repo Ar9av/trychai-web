@@ -142,7 +142,6 @@ const Page = () => {
                 clearInterval(timerRef.current);
 
                 const data = JSON.parse(response.Payload);
-
                 return data;
             } catch (error) {
                 clearInterval(intervalRef.current);
@@ -156,6 +155,7 @@ const Page = () => {
         setTimeRemaining(4 * 60); // Reset timer to 4 minutes
         setShowApiData(false);
         let data = await fetchFromLambda();
+        console.log('data', data)
         if (data) {
             setApiData(data);
             setShowApiData(true);

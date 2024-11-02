@@ -6,7 +6,8 @@ import {
   NavbarItem,
 } from "@nextui-org/navbar";
 import { Link } from "@nextui-org/link";
-import { Button } from "@nextui-org/button";
+// import { Button } from "@nextui-org/button";
+import {Button} from "@mui/material"
 import { useState, useEffect } from 'react';
 import {
   ClerkProvider,
@@ -67,20 +68,20 @@ export default function NavBar({ showNewReport = false, onToggleSidebar }) {
         <NavbarItem className="hidden sm:flex items-center gap-2">
           <SignedOut>
             <Button
-              as={Link}
+              component={Link}
               color="primary"
               href="/sign-in"
-              variant="solid"
-              className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+              variant="outlined"
+              className="hidden sm:flex"
             >
               Sign In
             </Button>
             <Button
-              as={Link}
+              component={Link}
               color="primary"
               href="/sign-up"
-              variant="solid"
-              className="hidden sm:flex bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+              variant="outlined"
+              className="hidden sm:flex"
             >
               Sign Up
             </Button>

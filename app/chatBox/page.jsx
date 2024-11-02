@@ -43,7 +43,6 @@ const Page = () => {
     const logUserInfo = async () => {
       if (session) {
         const user = session.user.emailAddresses[0].emailAddress;
-        console.log("User information:", user);
       }
     };
     logUserInfo();
