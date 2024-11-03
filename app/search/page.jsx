@@ -3,15 +3,14 @@ import Loader from '@/components/loader';
 import Sidebar from '@/components/sidebar';
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
-import { LuUser } from "react-icons/lu";
 import { Spinner } from '@nextui-org/react';
 import ApiData from '@/components/apiData';
 import { useRouter } from 'next/navigation';
 import AWS from 'aws-sdk';
-import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 import { useClerk } from "@clerk/nextjs";
 import NavBar from '@/components/navbar';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -142,6 +141,7 @@ const Page = () => {
                 clearInterval(timerRef.current);
 
                 const data = JSON.parse(response.Payload);
+                console.log("Lambda data", data)
                 return data;
             } catch (error) {
                 clearInterval(intervalRef.current);
@@ -155,13 +155,13 @@ const Page = () => {
         setTimeRemaining(4 * 60); // Reset timer to 4 minutes
         setShowApiData(false);
         let data = await fetchFromLambda();
-        console.log('data', data)
+        console.log('data', data);
         if (data) {
             setApiData(data);
             setShowApiData(true);
             localStorage.setItem('apiData', JSON.stringify(data));
             const existingData = JSON.parse(localStorage.getItem('apiData'));
-            if (!existingData.existing_entry) {
+            if (!existingData?.existing_entry) {
                 const previousReports = JSON.parse(localStorage.getItem('previousReports')) || [];
                 const newEntry = {
                     title: params.topic,
@@ -171,6 +171,9 @@ const Page = () => {
                 previousReports.push(newEntry);
                 localStorage.setItem('previousReports', JSON.stringify(previousReports));
             }
+            // if (data.existingData?.existing_entry) {
+            //     toast.success(`Report for ${params.topic} has been created.`);
+            // }
         }
     }, [reportResponse]);
 
@@ -195,52 +198,52 @@ const Page = () => {
 
     return (
         <ThemeProvider theme={darkTheme}>
-        <div style={{ height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
-            <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
-            {!isMobile && (
-                <button
-                    onClick={toggleSidebar}
-                    className={`absolute top-1/2 transform -translate-y-1/2 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'left-[240px]' : 'left-4'}`}
-                >
-                    {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
-                </button>
-            )}
-            <div className={`flex flex-col items-center flex-grow transition-all duration-300 
-                ${isMobile ? 'ml-0' : isSidebarOpen ? 'ml-72' : 'ml-8'}
-                overflow-auto
+            <div style={{ height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
+                <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
+                {!isMobile && (
+                    <button
+                        onClick={toggleSidebar}
+                        className={`absolute top-1/2 transform -translate-y-1/2 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'left-[240px]' : 'left-4'}`}
+                    >
+                        {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
+                    </button>
+                )}
+                <div className={`flex flex-col items-center flex-grow transition-all duration-300 
+                    ${isMobile ? 'ml-0' : isSidebarOpen ? 'ml-72' : 'ml-8'}
+                    overflow-auto
                 `}>
-                <NavBar onToggleSidebar={toggleSidebar} />
-                {/* <div className="border-2 w-3/4 border-transparent my-6"></div> */}
-                <div className='w-full'>
-                    <div className='flex gap-5 items-center justify-center w-full'>
-                        {!showApiData ? <Spinner color='default' /> : ""}
-                        <p className='text-[clamp(1.5rem,5vw,2.5rem)] text-white'>{searchParams.topic.charAt(0).toUpperCase() + searchParams.topic.slice(1)}</p>
-                    </div>
-                    <p className='text-[#9EA2A5] text-xs my-7'>
-                        {!showApiData ? `Report will be generated in ${formatTime(timeRemaining)}` : ""}
-                    </p>
-                    <p className='text-[#9EA2A5] text-xs my-7'>
-                        {!showApiData ? reportResponse[currentMessageIndex] : ""}
-                    </p>
-                    {!showApiData ? <Loader /> : <div className="w-full"><ApiData apiData={apiData} /></div>}
-                    {submittedTexts.map((text, index) => (
-                        <div key={index} className='w-full'>
-                            <div className='flex gap-5 items-center w-full'>
-                                {!showApiData ? <Spinner color='default' /> : ""}
-                                <p className='text-2xl font-semibold text-white'>{text}</p>
-                            </div>
-                            <p className='text-[#9EA2A5] text-xs my-7'>
-                                {!showApiData ? `Remaining time: ${formatTime(timeRemaining)}` : ""}
-                            </p>
-                            <p className='text-[#9EA2A5] text-xs my-7'>
-                                {!showApiData ? reportResponse[currentMessageIndex] : ""}
-                            </p>
-                            {!showApiData ? <Loader /> : <div className="w-full"><ApiData apiData={apiData} /></div>}
+                    <NavBar onToggleSidebar={toggleSidebar} />
+                    <div className='w-full'>
+                        <div className='flex gap-5 items-center justify-center w-full'>
+                            {!showApiData ? <Spinner color='default' /> : ""}
+                            <p className='text-[clamp(1.5rem,5vw,2.5rem)] text-white'>{searchParams.topic.charAt(0).toUpperCase() + searchParams.topic.slice(1)}</p>
                         </div>
-                    ))}
+                        <p className='text-[#9EA2A5] text-xs my-7'>
+                            {!showApiData ? `Report will be generated in ${formatTime(timeRemaining)}` : ""}
+                        </p>
+                        <p className='text-[#9EA2A5] text-xs my-7'>
+                            {!showApiData ? reportResponse[currentMessageIndex] : ""}
+                        </p>
+                        {!showApiData ? <Loader /> : <div className="w-full"><ApiData apiData={apiData} /></div>}
+                        {submittedTexts.map((text, index) => (
+                            <div key={index} className='w-full'>
+                                <div className='flex gap-5 items-center w-full'>
+                                    {!showApiData ? <Spinner color='default' /> : ""}
+                                    <p className='text-2xl font-semibold text-white'>{text}</p>
+                                </div>
+                                <p className='text-[#9EA2A5] text-xs my-7'>
+                                    {!showApiData ? `Remaining time: ${formatTime(timeRemaining)}` : ""}
+                                </p>
+                                <p className='text-[#9EA2A5] text-xs my-7'>
+                                    {!showApiData ? reportResponse[currentMessageIndex] : ""}
+                                </p>
+                                {!showApiData ? <Loader /> : <div className="w-full"><ApiData apiData={apiData} /></div>}
+                            </div>
+                        ))}
+                    </div>
                 </div>
+                {/* <ToastContainer /> */}
             </div>
-        </div>
         </ThemeProvider>
     );
 };
