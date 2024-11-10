@@ -13,6 +13,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { BackgroundBeams } from "@/components/ui/background";
 
 const darkTheme = createTheme({
     palette: {
@@ -243,6 +244,7 @@ const Page = () => {
                     </div>
                 </div>
                 {/* <ToastContainer /> */}
+                <BackgroundBeams className="absolute inset-0 z-0 pointer-events-none" />
             </div>
         </ThemeProvider>
     );

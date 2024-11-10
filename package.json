@@ -18,9 +18,10 @@
     "aws-sdk": "^2.1687.0",
     "axios": "^1.7.3",
     "clerk": "^0.8.3",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "firebase": "^10.12.5",
-    "framer-motion": "^10.16.12",
+    "framer-motion": "^10.18.0",
     "github-markdown-css": "^5.6.1",
     "html2pdf.js": "^0.10.2",
     "lucide-react": "^0.294.0",
@@ -35,7 +36,8 @@
     "react-markdown": "^9.0.1",
     "react-toastify": "^10.0.5",
     "rehype-raw": "^7.0.0",
-    "remark-gfm": "^4.0.0"
+    "remark-gfm": "^4.0.0",
+    "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
     "autoprefixer": "^10.0.1",
