@@ -12,6 +12,8 @@ import { useClerk } from "@clerk/nextjs";
 import { Snackbar, Switch, Button, TextField, ToggleButton, ToggleButtonGroup, MenuItem, Select, Box, FormControl, InputLabel, Chip } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import darkTheme from '../../theme';
+import { BackgroundBeams } from "@/components/ui/background";
+
 
 const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -274,7 +276,9 @@ const Page = () => {
         </div> 
         <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message="Please enter a valid domain." /> 
         <ToastContainer /> 
+        <BackgroundBeams className="absolute inset-0 z-0 pointer-events-none" />
       </div>
+      
     </ThemeProvider>
   );
 };
