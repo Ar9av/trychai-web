@@ -66,21 +66,35 @@ function customSplitTextToSize(doc, textContent, pageWidth, margin, widthOccupie
   return lines;
 }
 
+const CustomHeader = (props) => (
+  <header style={{ fontSize: '25px', padding: '10px 0' }}>
+    <hr style={{ border: '1px solid white', margin: '20px 0' }} />
+    {props.children}
+  </header>
+);
+
 const CustomH1 = (props) => (
-  <header style={{ fontSize: '35px', padding: '20px 0' }}>
+  <header style={{ fontSize: '35px', padding: '20px 0', fontWeight: 'bold' }}>
     <hr style={{ border: '1px solid white', margin: '20px 0' }} />
     {props.children}
   </header>
 );
 
 const CustomH2 = (props) => (
-  <header style={{ fontSize: '30px', padding: '10px 0' }}>
+  <header style={{ fontSize: '30px', padding: '10px 0', fontWeight: 'bold' }}>
     {props.children}
   </header>
 );
 
 const CustomH3 = (props) => (
-  <header style={{ fontSize: '20px', padding: '10px 0' }}>
+  <header style={{ fontSize: '20px', padding: '10px 0', fontWeight: 'bold' }}>
+    {props.children}
+  </header>
+);
+
+const CustomH4 = (props) => (
+  <header style={{ fontSize: '18px', padding: '10px 0' }}>
+    <hr style={{ border: '1px solid white', margin: '20px 0' }} />
     {props.children}
   </header>
 );
@@ -243,6 +257,9 @@ const ApiData = ({ apiData }) => {
         <MuiMarkdown
           overrides={{
             ...getOverrides({}),
+            header: {
+              component: CustomHeader,
+            },
             h1: {
               component: CustomH1,
             },
@@ -251,6 +268,9 @@ const ApiData = ({ apiData }) => {
             },
             h3: {
               component: CustomH3,
+            },
+            h4: {
+              component: CustomH4,
             },
             p: {
               component: CustomP,
