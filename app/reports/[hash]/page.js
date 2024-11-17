@@ -59,11 +59,11 @@ const Report = ({ params }) => {
                 <div className="flex flex-col items-center flex-grow transition-all duration-300 ml-8 overflow-auto">
                     <NavBar onToggleSidebar={() => {}} />
                     <div className='w-full'>
-                        <div className='flex gap-5 items-center justify-center w-full'>
+                        <div className={`flex items-center justify-center w-full ${loading ? 'h-20' : 'h-auto'}`}>
                             {loading ? <Loader /> : <Typography variant='h4' component='h1'>{title}</Typography>}
                         </div>
                         <div className='w-full'>
-                            {loading ? <CircularProgress color='default' /> : <ApiData apiData={apiData} />}
+                            {loading ? <Loader /> : <ApiData apiData={apiData} />}
                         </div>
                     </div>
                     {!loading && (
