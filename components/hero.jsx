@@ -3,6 +3,7 @@
 import { Chip } from "@nextui-org/chip";
 import { Button } from "@nextui-org/button";
 import { motion } from "framer-motion";
+import { InfiniteMovingCardsDemo } from "./infiniteCard";
 import {
   Modal,
   ModalContent,
@@ -80,43 +81,10 @@ export default function Hero() {
               </Link>
               <br/>
 
-              <Modal
-                isOpen={isOpen}
-                placement="center"
-                onOpenChange={onOpenChange}
-              >
-                <ModalContent>
-                  {(onClose) => (
-                    <>
-                      <ModalHeader className="flex flex-col gap-1">
-                        Start using NextUI
-                      </ModalHeader>
-                      <ModalBody>
-                        <p>
-                          NextUI it&apos;s a high customizable component library
-                          to build faster, beautiful, and more accessible NextJs
-                          applications.
-                        </p>
-                      </ModalBody>
-                      <ModalFooter>
-                        <Button color="danger" variant="flat" onPress={onClose}>
-                          Close
-                        </Button>
-                        <Button
-                          color="primary"
-                          variant="solid"
-                          onPress={onClose}
-                        >
-                          Action
-                        </Button>
-                      </ModalFooter>
-                    </>
-                  )}
-                </ModalContent>
-              </Modal>
             </motion.div>
           </div>
         </motion.div>
+        <InfiniteMovingCardsDemo />
       </section>
       <motion.div
         initial={{ y: 5, opacity: 0 }}
