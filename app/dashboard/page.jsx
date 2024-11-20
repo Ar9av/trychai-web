@@ -6,6 +6,7 @@ import NavBar from '@/components/navbar'
 import Sidebar from '@/components/sidebar'
 import { FileText, PlusCircle, Search } from 'lucide-react'
 import { BackgroundBeams } from "@/components/ui/background"
+import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
 export default function DashboardPage() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -43,8 +44,19 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-black">
-            <NavBar showNewReport={false} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+            <NavBar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+            {typeof window !== 'undefined' && window.innerWidth > 768 && (
+                <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className={`fixed top-16 left-4 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out z-50 sm:top-1/2 sm:-translate-y-1/2 ${
+                    isSidebarOpen ? 'sm:left-[260px]' : 'sm:left-4'
+                }`}
+                >
+                {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
+                </button>
+            )}
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex flex-col gap-8">

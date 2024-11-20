@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
-import { PlusCircle, RotateCcw, LayoutDashboard, FileText } from "lucide-react"
+import { PlusCircle, RotateCcw, LayoutDashboard, FileText, Coins } from "lucide-react"
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useClerk } from '@clerk/clerk-react'
@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation'
 
 const Sidebar = ({ isOpen, onClose }) => {
     const [previousReports, setPreviousReports] = useState([])
+    const [credits, setCredits] = useState(0)
     const router = useRouter()
     const { session } = useClerk()
     const pathname = usePathname()
@@ -28,6 +29,14 @@ const Sidebar = ({ isOpen, onClose }) => {
             }
         }
     }
+
+    // Fetch user credits
+    useEffect(() => {
+        if (session) {
+            // Mock credits for now - in production, fetch from your backend
+            setCredits(5)
+        }
+    }, [session])
 
     useEffect(() => {
         const cachedData = localStorage.getItem('previousReports')
@@ -107,6 +116,18 @@ const Sidebar = ({ isOpen, onClose }) => {
                         <PlusCircle className="h-4 w-4" />
                         <span className="text-sm font-medium">New Report</span>
                     </Link>
+
+                    <Link 
+                        href="/credits" 
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
+                            isActive('/credits') 
+                                ? 'bg-zinc-800 text-zinc-100' 
+                                : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100'
+                        }`}
+                    >
+                        <Coins className="h-4 w-4" />
+                        <span className="text-sm font-medium">Buy Credits</span>
+                    </Link>
                 </div>
 
                 <Separator className="my-2 bg-zinc-800" />
@@ -121,7 +142,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </button>
                 </div>
 
-                <ScrollArea className="h-[calc(100vh-12rem)] px-2">
+                <ScrollArea className="h-[calc(100vh-16rem)] px-2">
                     <div className="space-y-1 p-2">
                         {previousReports.map((item, index) => (
                             <button
@@ -142,6 +163,22 @@ const Sidebar = ({ isOpen, onClose }) => {
                         ))}
                     </div>
                 </ScrollArea>
+
+                {/* Credits Section */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-zinc-800 bg-zinc-950">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-zinc-400">
+                            <Coins className="h-4 w-4" />
+                            <span className="text-sm">{credits} credits remaining</span>
+                        </div>
+                        <Link 
+                            href="/credits"
+                            className="p-1 rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 transition-colors"
+                        >
+                            <PlusCircle className="h-4 w-4" />
+                        </Link>
+                    </div>
+                </div>
             </SheetContent>
         </Sheet>
     )
