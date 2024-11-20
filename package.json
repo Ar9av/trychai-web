@@ -15,8 +15,13 @@
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
     "@nextui-org/react": "^2.2.9",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-scroll-area": "^1.0.5",
+    "@radix-ui/react-separator": "^1.0.3",
+    "@radix-ui/react-slot": "^1.0.2",
     "aws-sdk": "^2.1687.0",
     "axios": "^1.7.3",
+    "class-variance-authority": "^0.7.0",
     "clerk": "^0.8.3",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
@@ -37,7 +42,8 @@
     "react-toastify": "^10.0.5",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",
-    "tailwind-merge": "^2.5.4"
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "autoprefixer": "^10.0.1",
