@@ -160,18 +160,35 @@ const Page = () => {
         if (data) {
             setApiData(data);
             setShowApiData(true);
-            localStorage.setItem('apiData', JSON.stringify(data));
             const existingData = JSON.parse(localStorage.getItem('apiData'));
             if (!existingData?.existing_entry) {
-                const previousReports = JSON.parse(localStorage.getItem('previousReports')) || [];
-                const newEntry = {
-                    title: params.topic,
-                    created_at: new Date().toISOString(),
-                    payload: JSON.stringify(params)
-                };
-                previousReports.push(newEntry);
-                localStorage.setItem('previousReports', JSON.stringify(previousReports));
+                try {
+                    const params = JSON.parse(localStorage.getItem('searchParams'));
+                    await fetch('/api/save_report', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        user_email: params.userEmail,
+                        md5_hash: data.payload_md5,
+                        private: params.private || true
+                      })
+                    });
+                } catch (error) {
+                    console.error('Error saving report:', error);
+                }
             }
+            // localStorage.setItem('apiData', JSON.stringify(data));
+            // const existingData = JSON.parse(localStorage.getItem('apiData'));
+            // if (!existingData?.existing_entry) {
+            //     const previousReports = JSON.parse(localStorage.getItem('previousReports')) || [];
+            //     const newEntry = {
+            //         title: params.topic,
+            //         created_at: new Date().toISOString(),
+            //         payload: JSON.stringify(params)
+            //     };
+            //     previousReports.push(newEntry);
+            //     localStorage.setItem('previousReports', JSON.stringify(previousReports));
+            // }
             // if (data.existingData?.existing_entry) {
             //     toast.success(`Report for ${params.topic} has been created.`);
             // }
@@ -225,7 +242,7 @@ const Page = () => {
                         <p className='text-[#9EA2A5] text-xs my-7'>
                             {!showApiData ? reportResponse[currentMessageIndex] : ""}
                         </p>
-                        {!showApiData ? <Loader /> : <div className="w-full"><ApiData apiData={apiData} /></div>}
+                        {!showApiData ? <Loader /> : <div className="w-full px-12 py-12"><ApiData apiData={apiData} /></div>}
                         {submittedTexts.map((text, index) => (
                             <div key={index} className='w-full'>
                                 <div className='flex gap-5 items-center w-full'>

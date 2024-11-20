@@ -55,13 +55,13 @@ const Page = () => {
       toast.error("Please log in to continue");
       return;
     }
-
+  
     if (totalCredits <= 0) {
       toast.error("You need credits to generate a report. Please purchase credits to continue.");
       router.push('/credits');
       return;
     }
-
+  
     const currentSearch = searchText.trim();
     if (currentSearch) {
       try {
@@ -76,19 +76,24 @@ const Page = () => {
             value: 1
           })
         });
-
+  
         if (!debitResponse.ok) {
           throw new Error('Failed to deduct credit');
         }
-
+  
         let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
         if (!history.includes(currentSearch)) {
           history.push(currentSearch);
           localStorage.setItem('searchHistory', JSON.stringify(history));
         }
-        const searchParams = JSON.stringify({ topic: searchText, outline });
+        const searchParams = JSON.stringify({ 
+          topic: searchText, 
+          outline,
+          userEmail: session.user.emailAddresses[0].emailAddress,
+          private: true // Set report as private
+        });
         localStorage.setItem('searchParams', searchParams);
-
+  
         await fetchCredits();
         router.push("/search");
       } catch (error) {

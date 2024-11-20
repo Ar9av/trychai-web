@@ -49,6 +49,15 @@ export default function DashboardPage() {
             day: 'numeric'
         })
     }
+    const handleReportClick = (report) => {
+        if (report.md5_hash) {
+          router.push(`/reports/${report.md5_hash}`);
+        } else {
+          console.log(report)
+          toast.error('Report hash not found');
+        }
+      };
+      
 
     return (
         <div className="min-h-screen bg-black">
@@ -146,11 +155,8 @@ export default function DashboardPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {filteredReports.map((report, index) => (
                                     <div
-                                        key={index}
-                                        onClick={() => {
-                                            localStorage.setItem('searchParams', report.payload)
-                                            router.push('/search')
-                                        }}
+                                    key={index}
+                                    onClick={() => handleReportClick(report)}
                                         className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer group"
                                     >
                                         <div className="flex items-start gap-3">

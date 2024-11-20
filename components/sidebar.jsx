@@ -58,14 +58,13 @@ const Sidebar = ({ isOpen, onClose }) => {
         }
     }, [session])
 
-    const handleHistoryClick = (text) => {
-        localStorage.setItem('searchParams', text)
-        if (pathname === '/search') {
-            window.location.reload()
+    const handleHistoryClick = (report) => {
+        if (report.md5_hash) {
+          router.push(`/reports/${report.md5_hash}`);
         } else {
-            router.push('/search')
+          toast.error('Report hash not found');
         }
-    }
+      };
 
     const handleRefreshClick = () => {
         localStorage.removeItem('previousReports')
@@ -157,10 +156,10 @@ const Sidebar = ({ isOpen, onClose }) => {
                     <div className="space-y-1 p-2">
                         {previousReports.map((item, index) => (
                             <button
-                                key={index}
-                                onClick={() => handleHistoryClick(item.payload)}
-                                className="w-full flex items-center gap-2 text-left rounded-md px-3 py-2 transition-colors text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
-                            >
+                            key={index}
+                            onClick={() => handleHistoryClick(item)}
+                            className="w-full flex items-center gap-2 text-left rounded-md px-3 py-2 transition-colors text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                          >
                                 <FileText className="h-4 w-4 flex-shrink-0" />
                                 <div className="flex-1 overflow-hidden">
                                     <div className="text-sm font-medium truncate">

@@ -18,7 +18,7 @@ export async function GET(request) {
       // Get user's private reports
       if (privateOnly) {
         query = `
-          SELECT dtv2.title, dtv2.created_at, dtv2.payload 
+          SELECT dtv2.title, dtv2.created_at, dtv2.payload, dtv2.md5_hash
           FROM data_table_v2 dtv2 
           JOIN user_data ud ON dtv2.md5_hash = ud.md5_hash 
           WHERE ud.user_email = $1 AND ud.private = true
@@ -28,7 +28,7 @@ export async function GET(request) {
       } else {
         // Get public reports
         query = `
-          SELECT dtv2.title, dtv2.created_at, dtv2.payload 
+          SELECT dtv2.title, dtv2.created_at, dtv2.payload, dtv2.md5_hash
           FROM data_table_v2 dtv2 
           LEFT JOIN user_data ud ON dtv2.md5_hash = ud.md5_hash 
           WHERE (ud.private = false OR ud.private IS NULL)
@@ -38,7 +38,7 @@ export async function GET(request) {
     } else {
       // Get all public reports
       query = `
-        SELECT dtv2.title, dtv2.created_at, dtv2.payload 
+        SELECT dtv2.title, dtv2.created_at, dtv2.payload, dtv2.md5_hash
         FROM data_table_v2 dtv2 
         LEFT JOIN user_data ud ON dtv2.md5_hash = ud.md5_hash 
         WHERE (ud.private = false OR ud.private IS NULL)
