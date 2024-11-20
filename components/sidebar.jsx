@@ -20,7 +20,8 @@ const Sidebar = ({ isOpen, onClose }) => {
         if (session) {
             const user_email = session.user.emailAddresses[0].emailAddress
             try {
-                const response = await fetch(`/api/getUserHashes?email=${encodeURIComponent(user_email)}`)
+                // Get only private reports for the sidebar
+                const response = await fetch(`/api/getUserHashes?email=${encodeURIComponent(user_email)}&private=true`)
                 const data = await response.json()
                 setPreviousReports(data)
                 localStorage.setItem('previousReports', JSON.stringify(data))
@@ -30,13 +31,23 @@ const Sidebar = ({ isOpen, onClose }) => {
         }
     }
 
-    // Fetch user credits
     useEffect(() => {
         if (session) {
-            // Mock credits for now - in production, fetch from your backend
-            setCredits(5)
+            fetchCredits()
         }
     }, [session])
+
+    const fetchCredits = async () => {
+        try {
+            const response = await fetch(`/api/credits?userId=${session.user.id}`)
+            const data = await response.json()
+            if (response.ok) {
+                setCredits(data.totalCredits)
+            }
+        } catch (error) {
+            console.error('Error fetching credits:', error)
+        }
+    }
 
     useEffect(() => {
         const cachedData = localStorage.getItem('previousReports')
@@ -133,7 +144,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <Separator className="my-2 bg-zinc-800" />
                 
                 <div className="flex items-center justify-between px-4 py-2">
-                    <h3 className="text-sm font-medium text-zinc-400">Recent Reports</h3>
+                    <h3 className="text-sm font-medium text-zinc-400">Private Reports</h3>
                     <button
                         onClick={handleRefreshClick}
                         className="p-1 rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 transition-colors"
@@ -164,7 +175,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </div>
                 </ScrollArea>
 
-                {/* Credits Section */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-zinc-800 bg-zinc-950">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-zinc-400">

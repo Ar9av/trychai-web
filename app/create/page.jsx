@@ -12,12 +12,21 @@ import { ThemeProvider } from '@mui/material/styles';
 import darkTheme from '../../theme';
 import { BackgroundBeams } from "@/components/ui/background";
 import { Lock, PlusCircle } from 'lucide-react';
+import { ToggleButton, ToggleButtonGroup, Chip } from '@mui/material';
 
 const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAdvancedOptionsOn, setIsAdvancedOptionsOn] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [outline, setOutline] = useState('');
+  const [phrases, setPhrases] = useState([]);
+  const [newPhrase, setNewPhrase] = useState('');
+  const [customDate, setCustomDate] = useState('');
+  const [domains, setDomains] = useState([]);
+  const [newDomain, setNewDomain] = useState('');
+  const [publishDate, setPublishDate] = useState('Any time');
+  const [phraseFilterType, setPhraseFilterType] = useState('Include');
+  const [filterType, setFilterType] = useState('Include');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [totalCredits, setTotalCredits] = useState(0);
   const router = useRouter();
@@ -93,6 +102,64 @@ const Page = () => {
     setSearchText(text);
   };
 
+  const isValidDomain = (domain) => {
+    const domainPattern = /^(?!:\/\/)([a-zA-Z0-9-_]{1,63}\.){1,255}[a-zA-Z]{2,10}$/;
+    return domainPattern.test(domain);
+  };
+
+  const handleAddDomain = () => {
+    if (newDomain && isValidDomain(newDomain) && !domains.some(({ domain }) => domain === newDomain)) {
+      setDomains([...domains, { domain: newDomain, filterType }]);
+      setNewDomain('');
+    } else {
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleRemoveDomain = (domainToRemove) => {
+    setDomains(domains.filter(({ domain }) => domain !== domainToRemove));
+  };
+
+  const handleAddPhrase = () => {
+    if (newPhrase && !phrases.some(({ phrase }) => phrase === newPhrase)) {
+      setPhrases([...phrases, { phrase: newPhrase, phraseFilterType }]);
+      setNewPhrase('');
+    }
+  };
+
+
+  const handleRemovePhrase = (phraseToRemove) => {
+    setPhrases(phrases.filter(({ phrase }) => phrase !== phraseToRemove));
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedText = localStorage.getItem('searchText');
+      if (storedText) {
+        setSearchText(storedText);
+      }
+
+      const mediaQuery = window.matchMedia('(max-width: 768px)');
+      if (mediaQuery.matches) {
+        setIsSidebarOpen(false);
+      }
+
+      const handleResize = () => {
+        if (window.innerWidth <= 768) {
+          setIsSidebarOpen(false);
+        }
+      };
+
+      const handleExampleClick = (text) => {
+        setSearchText(text);
+      };
+
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
+
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
@@ -162,44 +229,117 @@ const Page = () => {
             </div>
 
             {isAdvancedOptionsOn && (
-              <Box className='mt-8 flex flex-col gap-6 w-full'>
-                <TextField
-                  label="Report Outline"
-                  value={outline}
-                  onChange={(e) => setOutline(e.target.value)}
-                  multiline
-                  rows={4}
-                  placeholder="Create a report outline to fit in the way your report needs to be generated..."
-                  fullWidth
-                />
-              </Box>
-            )}
+      <Box className='mt-8 flex flex-col gap-6 w-full max-w-3xl'>
+        <Box className="flex w-full gap-4">
+          <Box className="w-full text-left">
+            <p>Outline</p>
+            <TextField value={outline} onChange={(e) => setOutline(e.target.value)} placeholder="Create a report outline to fit in the way your report needs to be generated..." className="w-full" multiline rows={4} />
+          </Box>
 
-            <Box className='mt-8 flex flex-wrap gap-4 w-full justify-center'>
-              {['2024 Smart Home IOT devices market in US', "Germany's Beer Industry", 'Augmented and Virtual Reality Industry'].map((example) => (
-                <Button
-                  key={example}
-                  variant="contained"
-                  onClick={() => handleExampleClick(example)}
-                  className="text-xs"
-                  sx={{ backgroundColor: 'rgb(173, 216, 230)' }}
-                >
-                  {example}
-                </Button>
-              ))}
-            </Box>
-          </div>
-        </div>
+        </Box>
 
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={6000}
-          onClose={handleSnackbarClose}
-          message="Please enter a valid domain."
-        />
-        <ToastContainer />
+        <Box className="w-full text-left">
+          <p className="mb-2">Phrase filter</p>
+          <ToggleButtonGroup
+            value={phraseFilterType}
+            exclusive
+            onChange={(e, newFilterType) => setPhraseFilterType(newFilterType)}
+            className="mb-2"
+          >
+            <ToggleButton size="small" value="Include">Include</ToggleButton>
+            <ToggleButton size="small" value="Exclude">Exclude</ToggleButton>
+          </ToggleButtonGroup>
+          <Box className="flex gap-2">
+            <TextField
+              placeholder="Enter phrase..."
+              value={newPhrase}
+              onChange={(e) => setNewPhrase(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddPhrase()}
+              fullWidth
+            />
+            <Button variant="contained" onClick={handleAddPhrase}>Add</Button>
+          </Box>
+          <Box className="flex flex-wrap gap-2 mt-2">
+            {phrases.map(({ phrase, phraseFilterType }, index) => (
+              <Chip
+                key={index}
+                label={phrase}
+                onDelete={() => handleRemovePhrase(phrase)}
+                color={phraseFilterType === 'Include' ? 'success' : 'error'}
+              />
+            ))}
+          </Box>
+        </Box>
+
+        <Box className="w-full text-left">
+          <p className="mb-2">Domain filter</p>
+          <ToggleButtonGroup 
+            value={filterType} 
+            exclusive 
+            onChange={(e, newFilterType) => setFilterType(newFilterType)} 
+            className="mb-2" 
+          >
+            <ToggleButton  size="small" value="Include">Include</ToggleButton>
+            <ToggleButton  size="small" value="Exclude">Exclude</ToggleButton>
+          </ToggleButtonGroup>
+          <Box className="flex gap-2">
+            <TextField 
+              placeholder="Enter domain..." 
+              value={newDomain} 
+              onChange={(e) => setNewDomain(e.target.value)} 
+              onKeyPress={(e) => e.key === 'Enter' && handleAddDomain()} 
+              fullWidth 
+            />
+            <Button variant="contained" onClick={handleAddDomain}>Add</Button>
+          </Box>
+          <Box className="flex flex-wrap gap-2 mt-2">
+            {domains.map(({ domain, filterType }, index) => (
+              <Chip 
+                key={index} 
+                label={domain} 
+                onDelete={() => handleRemoveDomain(domain)} 
+                color={filterType === 'Include' ? 'success' : 'error'} 
+              />
+            ))}
+          </Box>
+        </Box>
+      </Box>
+                  )}
+
+          <Box className='mt-8 flex flex-wrap gap-4 w-full max-w-3xl justify-center'>
+            <Button 
+              variant="contained" 
+              style={{ backgroundColor: 'rgb(173, 216, 230)' }} // Changed to a light blue RGB color
+              onClick={() => handleExampleClick("2024 Smart Home IOT devices market in US")} 
+              className='text-xs'
+            >
+              2024 Smart Home IOT devices market in US
+            </Button>
+            <Button 
+              variant="contained" 
+              style={{ backgroundColor: 'rgb(173, 216, 230)' }} // Changed to a light blue RGB color
+              onClick={() => handleExampleClick("Germany's Beer Industry")} 
+              className='text-xs'
+            >
+              Germany’s Beer Industry
+            </Button>
+            <Button 
+              variant="contained" 
+              style={{ backgroundColor: 'rgb(173, 216, 230)' }} // Changed to a light blue RGB color
+              onClick={() => handleExampleClick("Augmented and Virtual Reality Industry")} 
+              className='text-xs'
+            >
+              Augmented and Virtual Reality Industry
+            </Button>
+          </Box>
+
+        </div> 
+        <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message="Please enter a valid domain." /> 
+        <ToastContainer /> 
         <BackgroundBeams className="absolute inset-0 z-0 pointer-events-none" />
       </div>
+      </div>
+      
     </ThemeProvider>
   );
 };
