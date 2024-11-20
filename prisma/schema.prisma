@@ -1,0 +1,52 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"] // added binaryTargets
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model data_table {
+  id       Int    @id @default(autoincrement())
+  md5_hash String @db.Char(32)
+  payload  String
+  output   String
+}
+
+model data_table_v2 {
+  id         Int       @id @default(autoincrement())
+  md5_hash   String?   @unique @db.Char(32)
+  payload    String?
+  output     String?
+  title      String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model interested_users {
+  user_email String    @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  id         BigInt    @default(autoincrement())
+
+  @@ignore
+}
+
+model user_data {
+  id         Int       @id @default(autoincrement())
+  user_email String    @db.VarChar(255)
+  md5_hash   String    @db.Char(32)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  private    Boolean   @default(false)
+}
+
+model credit_history {
+  id          Int      @id @default(autoincrement())
+  user_id     String   @db.VarChar(255)
+  type        String   @db.VarChar(10)
+  description String
+  value       Int
+  created_at  DateTime @default(now())
+
+  @@index([user_id])
+}

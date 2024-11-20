@@ -133,10 +133,22 @@ const ApiData = ({ apiData }) => {
     return textNodes;
   };
 
+  function addWaterMark(doc) {
+    var totalPages = doc.internal.getNumberOfPages();
+    var i = 1;
+    for (i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setTextColor(190);
+      doc.text(150, doc.internal.pageSize.height - 10, 'Generated with TryChai.io');
+    }
+  
+    return doc;
+  }
+
   const handleExport = async (fileName) => {
     setLoading(true);
     try {
-      const doc = new jsPDF();
+      var doc = new jsPDF();
       const pageHeight = doc.internal.pageSize.height;
       const pageWidth = doc.internal.pageSize.width;
       const margin = 10;
@@ -204,7 +216,7 @@ const ApiData = ({ apiData }) => {
           });
         }
       });
-
+      doc = addWaterMark(doc);
       doc.save(fileName || 'export.pdf');
     } catch (error) {
       console.error('Error generating PDF:', error);
