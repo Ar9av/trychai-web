@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
-import { PlusCircle, RotateCcw, LayoutDashboard, FileText, Coins } from "lucide-react"
+import { PlusCircle, RotateCcw, LayoutDashboard, FileText, Coins, Newspaper } from "lucide-react"
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useClerk } from '@clerk/clerk-react'
@@ -20,7 +20,6 @@ const Sidebar = ({ isOpen, onClose }) => {
         if (session) {
             const user_email = session.user.emailAddresses[0].emailAddress
             try {
-                // Get only private reports for the sidebar
                 const response = await fetch(`/api/getUserHashes?email=${encodeURIComponent(user_email)}&private=true`)
                 const data = await response.json()
                 setPreviousReports(data)
@@ -64,7 +63,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         } else {
           toast.error('Report hash not found');
         }
-      };
+    }
 
     const handleRefreshClick = () => {
         localStorage.removeItem('previousReports')
@@ -125,6 +124,18 @@ const Sidebar = ({ isOpen, onClose }) => {
                     >
                         <PlusCircle className="h-4 w-4" />
                         <span className="text-sm font-medium">New Report</span>
+                    </Link>
+
+                    <Link 
+                        href="/news" 
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
+                            isActive('/news') 
+                                ? 'bg-zinc-800 text-zinc-100' 
+                                : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100'
+                        }`}
+                    >
+                        <Newspaper className="h-4 w-4" />
+                        <span className="text-sm font-medium">News Feed</span>
                     </Link>
 
                     <Link 
