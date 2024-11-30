@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useState, useEffect } from 'react';
 import NavBar from '@/components/navbar';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,6 +17,7 @@ import { Modal, ModalContent, Input, ModalHeader, ModalBody, ModalFooter } from 
 import { useClerk } from "@clerk/clerk-react";
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import NewsCard from '@/components/news-card';
 
 const defaultHashtags = ['AI', 'VentureCapital', 'Startups', 'Technology', 'Innovation'];
 
@@ -37,20 +38,16 @@ export default function NewsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-
-    return () => window.removeEventListener('resize', checkMobile);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
     if (session) {
-      fetchCredits();
       fetchUserTags();
+      fetchCredits();
     }
   }, [session]);
 
@@ -61,10 +58,9 @@ export default function NewsPage() {
   const fetchUserTags = async () => {
     try {
       const response = await fetch(`/api/tags?userId=${session.user.id}`);
-      const data = await response.json();
       if (response.ok) {
-        const userTags = data.map(tag => tag.tag);
-        setHashtags([...defaultHashtags, ...userTags]);
+        const data = await response.json();
+        setHashtags([...defaultHashtags, ...data.map(tag => tag.tag)]);
       }
     } catch (error) {
       console.error('Error fetching user tags:', error);
@@ -74,8 +70,8 @@ export default function NewsPage() {
   const fetchCredits = async () => {
     try {
       const response = await fetch(`/api/credits?userId=${session.user.id}`);
-      const data = await response.json();
       if (response.ok) {
+        const data = await response.json();
         setTotalCredits(data.totalCredits);
       }
     } catch (error) {
@@ -87,8 +83,10 @@ export default function NewsPage() {
     setLoading(true);
     try {
       const response = await fetch(`/api/news?hashtag=${hashtag}`);
-      const data = await response.json();
-      setNews(data);
+      if (response.ok) {
+        const data = await response.json();
+        setNews(data);
+      }
     } catch (error) {
       console.error('Error fetching news:', error);
     } finally {
@@ -125,10 +123,7 @@ export default function NewsPage() {
         const response = await fetch('/api/tags', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: session.user.id,
-            tag: customHashtag,
-          }),
+          body: JSON.stringify({ userId: session.user.id, tag: customHashtag }),
         });
 
         if (response.ok) {
@@ -146,13 +141,11 @@ export default function NewsPage() {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <div className="min-h-screen bg-black relative">
@@ -178,12 +171,11 @@ export default function NewsPage() {
               {hashtags.map((hashtag) => (
                 <Badge
                   key={hashtag}
-                  variant={selectedHashtag === hashtag ? 'default' : 'outline'}
+                  variant={selectedHashtag === hashtag ? "default" : "outline"}
                   className="cursor-pointer hover:bg-zinc-800 transition-colors"
                   onClick={() => setSelectedHashtag(hashtag)}
                 >
-                  <Hash className="h-3 w-3 mr-1" />
-                  {hashtag}
+                  <Hash className="h-3 w-3 mr-1" />{hashtag}
                 </Badge>
               ))}
               <Button
@@ -210,55 +202,9 @@ export default function NewsPage() {
                   </div>
                 ))
               ) : (
-                news.map((item, index) => {
-                  const newsData = item.news_json;
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="group bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-all"
-                    >
-                      <div className="flex flex-col md:flex-row justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <h2 className="text-xl font-semibold text-zinc-100 mb-2 group-hover:text-zinc-300 transition-colors">
-                              {newsData.title}
-                            </h2>
-                            <div className="flex items-center gap-2 text-zinc-400 text-sm mb-4">
-                              <Calendar className="h-4 w-4" />
-                              <span>{formatDate(newsData.date_of_post)}</span>
-                            </div>
-                          </div>
-                          <p className="text-zinc-300 mb-4 line-clamp-3">
-                            {newsData.summary}
-                          </p>
-                          <div className="flex items-center gap-4">
-                            <Link
-                              href={newsData.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-sm"
-                            >
-                              Read full article
-                              <ExternalLink className="h-4 w-4" />
-                            </Link>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => fetchSimilarArticles(item)}
-                              className="text-zinc-400 hover:text-zinc-300"
-                            >
-                              Similar articles
-                              <ArrowRight className="h-4 w-4 ml-2" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
+                news.map((item, index) => (
+                  <NewsCard key={index} news={item} index={index} />
+                ))
               )}
             </div>
           </ScrollArea>

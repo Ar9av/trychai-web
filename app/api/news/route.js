@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fetchAndStoreNews } from '@/lib/news-service';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -12,16 +13,25 @@ export async function GET(req) {
   }
 
   try {
-    console.log("Fetching news for hashtag:", hashtag);
-    const news = await prisma.news.findMany({
+    // First try to get recent news from database
+    const recentNews = await prisma.news.findFirst({
       where: {
-        hashtag: "#" + hashtag.toLowerCase()
+        hashtag: `#${hashtag.toLowerCase()}`,
+        created_at: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+        }
       },
       orderBy: {
-        date: 'desc'
+        created_at: 'desc'
       }
     });
 
+    if (recentNews) {
+      return NextResponse.json(recentNews.news_json);
+    }
+
+    // If no recent news, fetch and store new data
+    const news = await fetchAndStoreNews(hashtag);
     return NextResponse.json(news);
   } catch (error) {
     console.error('Error fetching news:', error);
