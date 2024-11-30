@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react'
 import NavBar from '@/components/navbar'
 import Sidebar from '@/components/sidebar'
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Coins, Check } from 'lucide-react'
 import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io'
+import { Coins, Check, Mail, Ticket } from 'lucide-react'
 import { BackgroundBeams } from "@/components/ui/background"
 import { useClerk } from '@clerk/clerk-react'
 import { toast } from 'react-toastify'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Button, useDisclosure } from "@nextui-org/react"
 
 const creditPackages = [
   {
@@ -55,6 +56,10 @@ export default function CreditsPage() {
   const [totalCredits, setTotalCredits] = useState(0)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [earlyAccessEmail, setEarlyAccessEmail] = useState('')
+  const { isOpen: isEarlyAccessOpen, onOpen: onEarlyAccessOpen, onClose: onEarlyAccessClose } = useDisclosure()
+  const { isOpen: isCouponOpen, onOpen: onCouponOpen, onClose: onCouponClose } = useDisclosure()
 
   useEffect(() => {
     const checkMobile = () => {
@@ -93,27 +98,61 @@ export default function CreditsPage() {
       return
     }
 
+    onEarlyAccessOpen()
+  }
+
+  const handleCouponSubmit = async () => {
+    if (!session) {
+      toast.error('Please sign in to redeem coupon')
+      return
+    }
+
+    if (couponCode.toLowerCase() === 'trych50') {
+      try {
+        const response = await fetch('/api/credits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: session.user.id,
+            type: 'credit',
+            description: 'Coupon redemption: TRYCH50',
+            value: 50
+          })
+        })
+
+        if (response.ok) {
+          toast.success('Successfully redeemed 50 credits!')
+          setCouponCode('')
+          fetchCreditHistory()
+          onCouponClose()
+        }
+      } catch (error) {
+        toast.error('Failed to redeem coupon')
+      }
+    } else {
+      toast.error('Invalid coupon code')
+    }
+  }
+
+  const handleEarlyAccessRequest = async () => {
     try {
-      const response = await fetch('/api/credits', {
+      const response = await fetch('/api/interestedUser', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: session.user.id,
-          type: 'credit',
-          description: `Credit package: ${pkg.name}`,
-          value: pkg.credits
+          user_email: earlyAccessEmail
         })
       })
 
       if (response.ok) {
-        toast.success(`Successfully purchased ${pkg.credits} credits`)
-        fetchCreditHistory()
+        toast.success('Thank you for your interest! We\'ll get back to you soon.')
+        setEarlyAccessEmail('')
+        onEarlyAccessClose()
       } else {
-        toast.error('Failed to purchase credits')
+        throw new Error('Failed to submit request')
       }
     } catch (error) {
-      console.error('Error purchasing credits:', error)
-      toast.error('Failed to process purchase')
+      toast.error('Failed to submit request. Please try again.')
     }
   }
 
@@ -153,6 +192,16 @@ export default function CreditsPage() {
             <div className="mt-4 inline-flex items-center gap-2 bg-zinc-800 px-3 sm:px-4 py-2 rounded-full">
               <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-300" />
               <span className="text-sm sm:text-base text-zinc-100 font-semibold">{totalCredits} credits available</span>
+            </div>
+            <div className="mt-4 flex justify-center gap-4">
+              <Button
+                color="primary"
+                variant="flat"
+                onPress={onCouponOpen}
+                className="font-semibold"
+              >
+                Redeem Coupon
+              </Button>
             </div>
           </div>
 
@@ -194,16 +243,16 @@ export default function CreditsPage() {
                   ))}
                 </ul>
 
-                <button
-                  onClick={() => handlePurchase(pkg)}
-                  className={`w-full py-2 rounded-md transition-colors text-sm sm:text-base ${
+                <Button
+                  onPress={() => handlePurchase(pkg)}
+                  className={`w-full ${
                     pkg.popular
                       ? 'bg-blue-500 hover:bg-blue-600 text-white'
                       : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100'
                   }`}
                 >
                   Purchase Credits
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -237,6 +286,130 @@ export default function CreditsPage() {
           )}
         </main>
       </ScrollArea>
+
+      {/* Early Access Modal */}
+      <Modal 
+        isOpen={isEarlyAccessOpen} 
+        onClose={onEarlyAccessClose}
+        backdrop="blur"
+        radius="lg"
+        classNames={{
+          base: "bg-zinc-900 border border-zinc-700 shadow-2xl",
+          header: "border-b border-zinc-700 pb-3",
+          body: "py-6",
+          footer: "border-t border-zinc-700 pt-4"
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-3 text-zinc-100">
+                <Mail className="w-6 h-6 text-blue-500" />
+                <span>Request Early Access</span>
+              </ModalHeader>
+              <ModalBody>
+                <Input
+                  startContent={<Mail className="text-zinc-500 w-5 h-5" />}
+                  label="Email Address"
+                  placeholder="you@example.com"
+                  value={earlyAccessEmail}
+                  onChange={(e) => setEarlyAccessEmail(e.target.value)}
+                  variant="bordered"
+                  color="primary"
+                  classNames={{
+                    label: "text-zinc-400",
+                    input: "text-zinc-100",
+                    inputWrapper: "border-zinc-700 bg-zinc-800 hover:border-blue-500"
+                  }}
+                />
+                <p className="text-zinc-400 text-sm mt-2 flex items-center gap-2">
+                  <Check className="w-5 h-5 text-green-500" />
+                  Join our early access program to be among the first to experience our platform.
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button 
+                  color="default" 
+                  variant="light" 
+                  onPress={onClose}
+                  className="text-zinc-400 hover:text-zinc-100"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  color="primary" 
+                  onPress={handleEarlyAccessRequest}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Request Access
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      {/* Coupon Modal */}
+      <Modal 
+        isOpen={isCouponOpen} 
+        onClose={onCouponClose}
+        backdrop="blur"
+        radius="lg"
+        classNames={{
+          base: "bg-zinc-900 border border-zinc-700 shadow-2xl",
+          header: "border-b border-zinc-700 pb-3",
+          body: "py-6",
+          footer: "border-t border-zinc-700 pt-4"
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-3 text-zinc-100">
+                <Ticket className="w-6 h-6 text-green-500" />
+                <span>Redeem Coupon</span>
+              </ModalHeader>
+              <ModalBody>
+                <Input
+                  startContent={<Ticket className="text-zinc-500 w-5 h-5" />}
+                  label="Coupon Code"
+                  placeholder="Enter coupon code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  variant="bordered"
+                  color="primary"
+                  classNames={{
+                    label: "text-zinc-400",
+                    input: "text-zinc-100",
+                    inputWrapper: "border-zinc-700 bg-zinc-800 hover:border-green-500"
+                  }}
+                />
+                <p className="text-zinc-400 text-sm mt-2 flex items-center gap-2">
+                  <Check className="w-5 h-5 text-green-500" />
+                  Enter your unique coupon code to receive additional credits.
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button 
+                  color="default" 
+                  variant="light" 
+                  onPress={onClose}
+                  className="text-zinc-400 hover:text-zinc-100"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  color="primary" 
+                  onPress={handleCouponSubmit}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Apply Coupon
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
       <BackgroundBeams className="absolute inset-0 z-0 pointer-events-none" />
     </div>
   )

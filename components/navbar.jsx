@@ -34,7 +34,7 @@ export default function NavBar({ showNewReport = false, onToggleSidebar }) {
   }, [isBrowser]);
 
   // Only show the toggle button if running in the browser and on mobile
-  const toggleButton = windowWidth <= 768 && session && (
+  const toggleButton = windowWidth <= 768 && session && window.location.pathname !== "/" && (
     <div className="absolute left-0 ml-3">
       <button onClick={onToggleSidebar} className="flex flex-col items-center justify-center">
         <span className="block w-6 h-0.5 bg-white mb-1"></span>
@@ -53,6 +53,7 @@ export default function NavBar({ showNewReport = false, onToggleSidebar }) {
           <span className="font-light tracking-tighter text-inherit text-lg">
             TrychAI
           </span>
+          <span className="text-xs text-white bg-blue-500 rounded-full px-2 ml-2">Beta</span>
         </NavbarBrand>
       </NavbarContent>
       <NavbarContent className="hidden sm:flex gap-5" justify="center">
@@ -61,7 +62,7 @@ export default function NavBar({ showNewReport = false, onToggleSidebar }) {
             <span className="bg-gradient-to-t from-light to-foreground text-transparent bg-clip-text border-none">
               TrychAI
             </span>
-          </Link>
+        </Link>
         </NavbarBrand>
       </NavbarContent>
       <NavbarContent justify="end">
