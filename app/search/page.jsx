@@ -177,21 +177,6 @@ const Page = () => {
                     console.error('Error saving report:', error);
                 }
             }
-            // localStorage.setItem('apiData', JSON.stringify(data));
-            // const existingData = JSON.parse(localStorage.getItem('apiData'));
-            // if (!existingData?.existing_entry) {
-            //     const previousReports = JSON.parse(localStorage.getItem('previousReports')) || [];
-            //     const newEntry = {
-            //         title: params.topic,
-            //         created_at: new Date().toISOString(),
-            //         payload: JSON.stringify(params)
-            //     };
-            //     previousReports.push(newEntry);
-            //     localStorage.setItem('previousReports', JSON.stringify(previousReports));
-            // }
-            // if (data.existingData?.existing_entry) {
-            //     toast.success(`Report for ${params.topic} has been created.`);
-            // }
         }
     }, [reportResponse]);
 
@@ -216,21 +201,9 @@ const Page = () => {
 
     return (
         <ThemeProvider theme={darkTheme}>
-            <div style={{ height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
-                <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
-                {!isMobile && (
-                    <button
-                        onClick={toggleSidebar}
-                        className={`absolute top-1/2 transform -translate-y-1/2 p-2 text-white rounded-full shadow-md transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'left-[240px]' : 'left-4'}`}
-                    >
-                        {isSidebarOpen ? <IoIosArrowBack size={24} /> : <IoIosArrowForward size={24} />}
-                    </button>
-                )}
-                <div className={`flex flex-col items-center flex-grow transition-all duration-300 
-                    ${isMobile ? 'ml-0' : isSidebarOpen ? 'ml-72' : 'ml-8'}
-                    overflow-auto
-                `}>
-                    <NavBar onToggleSidebar={toggleSidebar} />
+            <NavBar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+            <div style={{ height: '100vh', padding: typeof window !== 'undefined' && window.innerWidth <= 768 ? '9px' : '20px' }} className="relative min-h-screen bg-black flex fixed w-full justify-start">
                     <div className='w-full'>
                         <div className='flex gap-5 items-center justify-center w-full'>
                             {!showApiData ? <Spinner color='default' /> : ""}
@@ -255,14 +228,13 @@ const Page = () => {
                                 <p className='text-[#9EA2A5] text-xs my-7'>
                                     {!showApiData ? reportResponse[currentMessageIndex] : ""}
                                 </p>
-                                {!showApiData ? <Loader /> : <div className="w-full"><ApiData apiData={apiData} /></div>}
+                                {!showApiData ? <Loader /> : <div className="w-full h-full"><ApiData apiData={apiData} /></div>}
                             </div>
                         ))}
                     </div>
-                </div>
-                {/* <ToastContainer /> */}
+                {/* </div> */}
                 <BackgroundBeams className="absolute inset-0 z-0 pointer-events-none" />
-            </div>
+             </div>
         </ThemeProvider>
     );
 };

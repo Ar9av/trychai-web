@@ -248,7 +248,7 @@ const ApiData = ({ apiData }) => {
   };
 
   return (
-    <div id="api-data-container" className="relative flex flex-col w-full h-full">
+    <div id="api-data-container" className="relative flex flex-col w-full h-screen mx-auto">
       <div className="absolute top-4 right-4 flex space-x-2">
         <IconButton aria-label="share" onClick={() => { 
           const link = window.location.href.includes('reports') ? window.location.href : `${window.location.origin}/reports/${md5}`; 
@@ -265,7 +265,7 @@ const ApiData = ({ apiData }) => {
           <DownloadIcon />
         </IconButton>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto py-4 px-0 text-left">
         <MuiMarkdown
           overrides={{
             ...getOverrides({}),
