@@ -22,9 +22,9 @@ export default function RootLayout({ children }) {
         <meta property="og:image" content={metadata.image} /> {/* Added meta tag for image */}
       </head>
       <body className={inter.className}>
-        <div className="header">
+        {/* <div className="header">
           <Image src={metadata.image} alt="TrychAI Logo" width={100} height={50} />
-        </div>
+        </div> */}
         <Providers>{children}</Providers>
       </body>
     </html>

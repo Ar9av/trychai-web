@@ -84,8 +84,8 @@ export default function Hero() {
             </motion.div>
           </div>
         </motion.div>
-        <InfiniteMovingCardsDemo />
       </section>
+      <InfiniteMovingCardsDemo />
       <motion.div
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

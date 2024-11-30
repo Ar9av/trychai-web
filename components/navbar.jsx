@@ -50,9 +50,9 @@ export default function NavBar({ showNewReport = false, onToggleSidebar }) {
       {toggleButton}
       <NavbarContent className="sm:hidden pr-3" justify="center">
         <NavbarBrand className="pl-10"> {/* Adjust this class to add padding */}
-          <span className="font-light tracking-tighter text-inherit text-lg">
+          <Link href="/" className="font-light tracking-tighter text-inherit text-lg">
             TrychAI
-          </span>
+          </Link>
           <span className="text-xs text-white bg-blue-500 rounded-full px-2 ml-2">Beta</span>
         </NavbarBrand>
       </NavbarContent>
