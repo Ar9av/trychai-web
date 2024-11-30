@@ -57,7 +57,7 @@ const Report = ({ params }) => {
             <Head>
                 <title>{title || 'Loading...'}</title>
             </Head>
-            <div style={{ height: '100vh', padding: window.innerWidth > 768 ? '20px' : '9px' }} className="relative min-h-screen bg-black flex fixed w-full justify-start">
+            <div style={{ height: '100vh', padding: typeof window !== 'undefined' && window.innerWidth > 768 ? '20px' : '9px' }} className="relative min-h-screen bg-black flex fixed w-full justify-start">
                 {/* <Sidebar isOpen={false} onClose={() => {}} /> */}
                 {/* <div className="flex flex-col items-center flex-grow transition-all duration-300 ml-8 overflow-auto"> */}
                 <div>

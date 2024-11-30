@@ -203,7 +203,7 @@ const Page = () => {
         <ThemeProvider theme={darkTheme}>
             <NavBar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-            <div style={{ height: '100vh', padding: window.innerWidth <= 768 ? '9px' : '20px' }} className="relative min-h-screen bg-black flex fixed w-full justify-start">
+            <div style={{ height: '100vh', padding: typeof window !== 'undefined' && window.innerWidth <= 768 ? '9px' : '20px' }} className="relative min-h-screen bg-black flex fixed w-full justify-start">
                     <div className='w-full'>
                         <div className='flex gap-5 items-center justify-center w-full'>
                             {!showApiData ? <Spinner color='default' /> : ""}
