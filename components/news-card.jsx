@@ -2,6 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Calendar } from 'lucide-react';
 import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Typography } from "@/components/ui/typography";
 
 export default function NewsCard({ news, index }) {
   const formatDate = (dateString) => {
@@ -17,35 +20,34 @@ export default function NewsCard({ news, index }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="group bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-all"
+      className="w-full"
     >
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <div className="flex-1">
+      <Card className="hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <h2 className="text-xl font-semibold text-zinc-100 mb-2 group-hover:text-zinc-300 transition-colors">
+            <CardTitle className="text-lg font-semibold">
               {news.title}
-            </h2>
-            <div className="flex items-center gap-2 text-zinc-400 text-sm mb-4">
-              <Calendar className="h-4 w-4" />
-              <span>{formatDate(news.publishedDate)}</span>
-            </div>
+            </CardTitle>
           </div>
-          <p className="text-zinc-300 mb-4 line-clamp-3">
+        </CardHeader>
+        <CardContent>
+          <Typography variant="muted" className="mb-4 text-sm line-clamp-3">
             {news.summary}
-          </p>
-          <div className="flex items-center gap-4">
+          </Typography>
+          <div className="flex justify-between items-center">
             <Link
               href={news.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-sm"
+              className="text-primary hover:text-primary/80 transition-colors text-sm flex items-center gap-1"
             >
               Read full article
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-3 w-3" />
             </Link>
+            <span className="text-xs text-right">{formatDate(news.publishedDate)}</span>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }
