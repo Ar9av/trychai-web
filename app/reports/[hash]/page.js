@@ -22,6 +22,7 @@ const Report = ({ params }) => {
     const [loading, setLoading] = useState(true);
     const [title, setTitle] = useState(null);
     const [apiData, setApiData] = useState(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const { session } = useClerk();
 
@@ -51,13 +52,16 @@ const Report = ({ params }) => {
 
     return (
         <ThemeProvider theme={darkTheme}>
+            <NavBar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             <Head>
                 <title>{title || 'Loading...'}</title>
             </Head>
-            <div style={{ height: '100vh' }} className="relative min-h-screen bg-black flex p-4 fixed w-full">
-                <Sidebar isOpen={false} onClose={() => {}} />
-                <div className="flex flex-col items-center flex-grow transition-all duration-300 ml-8 overflow-auto">
-                    <NavBar onToggleSidebar={() => {}} />
+            <div style={{ height: '100vh', padding: window.innerWidth > 768 ? '20px' : '9px' }} className="relative min-h-screen bg-black flex fixed w-full justify-start">
+                {/* <Sidebar isOpen={false} onClose={() => {}} /> */}
+                {/* <div className="flex flex-col items-center flex-grow transition-all duration-300 ml-8 overflow-auto"> */}
+                <div>
+                    {/* <NavBar onToggleSidebar={() => {}} /> */}
                     <div className='w-full'>
                         <div className={`flex items-center justify-center w-full ${loading ? 'h-20' : 'h-auto'}`}>
                             {loading ? <Loader /> : <Typography variant='h4' component='h1'>{title}</Typography>}
