@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useClerk } from '@clerk/clerk-react'
 import { usePathname } from 'next/navigation'
+import { toast } from 'react-toastify'
 
 const Sidebar = ({ isOpen, onClose }) => {
     const [previousReports, setPreviousReports] = useState([])

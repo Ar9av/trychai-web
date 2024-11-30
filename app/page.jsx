@@ -5,6 +5,7 @@ import Pricing from "@/components/pricing";
 import Partners from "@/components/partners";
 import Faq from "@/components/faq";
 import Features from "@/components/features";
+import EarlyAccess from "@/components/early-access";
 
 export default function Home() {
   return (
@@ -15,6 +16,7 @@ export default function Home() {
       <Partners />
       <Features />
       <Pricing />
+      <EarlyAccess />
       <Faq />
       <Footer />
     </main>

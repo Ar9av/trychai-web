@@ -61,3 +61,13 @@ model news {
 
   @@index([hashtag])
 }
+
+model user_tags {
+  id         Int      @id @default(autoincrement())
+  user_id    String   @db.VarChar(255)
+  tag        String   @db.VarChar(50)
+  created_at DateTime @default(now())
+
+  @@unique([user_id, tag])
+  @@index([user_id])
+}
