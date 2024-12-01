@@ -25,6 +25,7 @@ export default function NewsPage() {
   const [selectedHashtag, setSelectedHashtag] = useState('AI');
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [similarArticles, setSimilarArticles] = useState([]);
   const [showSimilar, setShowSimilar] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -34,6 +35,7 @@ export default function NewsPage() {
   const [hashtags, setHashtags] = useState(defaultHashtags);
   const [totalCredits, setTotalCredits] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [startDate, setStartDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const { session } = useClerk();
   const router = useRouter();
 
@@ -52,6 +54,7 @@ export default function NewsPage() {
   }, [session]);
 
   useEffect(() => {
+    setStartDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
     fetchNews(selectedHashtag);
   }, [selectedHashtag]);
 
@@ -79,35 +82,64 @@ export default function NewsPage() {
     }
   };
 
-  const fetchNews = async (hashtag) => {
-    setLoading(true);
+  const fetchNews = async (hashtag, loadMore = false) => {
+    if (!loadMore) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
-      const response = await fetch(`/api/news?hashtag=${hashtag}`);
+      const response = await fetch(`/api/news?hashtag=${hashtag}&startDate=${startDate.toISOString()}`);
       if (response.ok) {
         const data = await response.json();
-        setNews(data);
+        if (loadMore) {
+          setNews(prevNews => [...prevNews, ...data]);
+        } else {
+          setNews(data);
+        }
       }
     } catch (error) {
       console.error('Error fetching news:', error);
+      toast.error('Failed to fetch news');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const fetchSimilarArticles = async (article) => {
-    setSelectedArticle(article);
-    setShowSimilar(true);
+  const handleLoadMore = async () => {
+    if (totalCredits <= 0) {
+      toast.error('You need credits to load more news');
+      router.push('/credits');
+      return;
+    }
+
     try {
-      const exa = new Exa(process.env.NEXT_PUBLIC_EXA_API_KEY);
-      const domain = new URL(article.news_json.link).hostname;
-      const result = await exa.findSimilar(domain, {
-        excludeDomains: [domain],
-        numResults: 10,
-        startPublishedDate: new Date(new Date(article.date).getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      // Deduct credit
+      const debitResponse = await fetch('/api/credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: session.user.id,
+          type: 'debit',
+          description: `Load more news for ${selectedHashtag}`,
+          value: 1
+        })
       });
-      setSimilarArticles(result.results);
+
+      if (!debitResponse.ok) {
+        throw new Error('Failed to deduct credit');
+      }
+
+      // Update start date to 2 days earlier
+      const newStartDate = new Date(startDate.getTime() - 2 * 24 * 60 * 60 * 1000);
+      setStartDate(newStartDate);
+      await fetchNews(selectedHashtag, true);
+      await fetchCredits();
     } catch (error) {
-      console.error('Error fetching similar articles:', error);
+      console.error('Error loading more news:', error);
+      toast.error('Failed to load more news');
     }
   };
 
@@ -140,12 +172,6 @@ export default function NewsPage() {
       }
     }
   };
-
-  const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 
   return (
     <div className="min-h-screen bg-black relative">
@@ -202,48 +228,33 @@ export default function NewsPage() {
                   </div>
                 ))
               ) : (
-                news.map((item, index) => (
-                  <NewsCard key={index} news={item} index={index} />
-                ))
+                <>
+                  {news.map((item, index) => (
+                    <NewsCard key={index} news={item} index={index} />
+                  ))}
+                  {news.length > 0 && (
+                    <div className="flex justify-center mt-6">
+                      <Button
+                        onClick={handleLoadMore}
+                        disabled={loadingMore || totalCredits <= 0}
+                        className="bg-zinc-800 hover:bg-zinc-700"
+                      >
+                        {loadingMore ? (
+                          "Loading..."
+                        ) : totalCredits <= 0 ? (
+                          "Need credits to load more"
+                        ) : (
+                          "Load More News (1 credit)"
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </ScrollArea>
         </div>
       </main>
-
-      <Sheet open={showSimilar} onOpenChange={setShowSimilar}>
-        <SheetContent side="right" className="w-full sm:w-[400px] bg-zinc-950 border-l border-zinc-800">
-          <SheetHeader>
-            <SheetTitle className="text-zinc-100">Similar Articles</SheetTitle>
-          </SheetHeader>
-          <Separator className="my-4" />
-          {selectedArticle && (
-            <div className="mb-4">
-              <p className="text-sm text-zinc-400">Based on</p>
-              <p className="text-zinc-200 font-medium">{selectedArticle.news_json.title}</p>
-            </div>
-          )}
-          <ScrollArea className="h-[calc(100vh-8rem)]">
-            <div className="space-y-4">
-              {similarArticles.map((article, index) => (
-                <Link
-                  key={index}
-                  href={article.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-4 rounded-lg bg-zinc-900 hover:bg-zinc-800 transition-colors"
-                >
-                  <h3 className="text-zinc-100 font-medium mb-2">{article.title}</h3>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400">{formatDate(article.publishedDate)}</span>
-                    <ExternalLink className="h-4 w-4 text-zinc-400" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
 
       <Modal
         isOpen={isModalOpen}
