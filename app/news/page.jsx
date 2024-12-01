@@ -2,15 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import NavBar from '@/components/navbar';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { BackgroundBeams } from "@/components/ui/background";
-import { ExternalLink, Calendar, Hash, ArrowRight, Plus, Lock } from 'lucide-react';
+import { ExternalLink, Calendar, Hash, ArrowRight, Plus, Lock, X } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import Exa from 'exa-js';
 import Sidebar from '@/components/sidebar';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import { Modal, ModalContent, Input, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
@@ -26,9 +23,6 @@ export default function NewsPage() {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [similarArticles, setSimilarArticles] = useState([]);
-  const [showSimilar, setShowSimilar] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [customHashtag, setCustomHashtag] = useState('');
@@ -63,10 +57,37 @@ export default function NewsPage() {
       const response = await fetch(`/api/tags?userId=${session.user.id}`);
       if (response.ok) {
         const data = await response.json();
-        setHashtags([...defaultHashtags, ...data.map(tag => tag.tag)]);
+        const userTags = data.map(tag => tag.tag);
+        setHashtags([...defaultHashtags, ...userTags]);
       }
     } catch (error) {
       console.error('Error fetching user tags:', error);
+    }
+  };
+
+  const handleRemoveTag = async (tag) => {
+    if (defaultHashtags.includes(tag)) {
+      toast.error("Default tags cannot be removed");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/tags?userId=${session.user.id}&tag=${tag}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setHashtags(prev => prev.filter(t => t !== tag));
+        if (selectedHashtag === tag) {
+          setSelectedHashtag('AI');
+        }
+        toast.success('Tag removed successfully');
+      } else {
+        throw new Error('Failed to remove tag');
+      }
+    } catch (error) {
+      console.error('Error removing tag:', error);
+      toast.error('Failed to remove tag');
     }
   };
 
@@ -116,7 +137,6 @@ export default function NewsPage() {
     }
 
     try {
-      // Deduct credit
       const debitResponse = await fetch('/api/credits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,7 +152,6 @@ export default function NewsPage() {
         throw new Error('Failed to deduct credit');
       }
 
-      // Update start date to 2 days earlier
       const newStartDate = new Date(startDate.getTime() - 2 * 24 * 60 * 60 * 1000);
       setStartDate(newStartDate);
       await fetchNews(selectedHashtag, true);
@@ -198,10 +217,22 @@ export default function NewsPage() {
                 <Badge
                   key={hashtag}
                   variant={selectedHashtag === hashtag ? "default" : "outline"}
-                  className="cursor-pointer hover:bg-zinc-800 transition-colors"
+                  className="cursor-pointer hover:bg-zinc-800 transition-colors group relative"
                   onClick={() => setSelectedHashtag(hashtag)}
                 >
-                  <Hash className="h-3 w-3 mr-1" />{hashtag}
+                  <Hash className="h-3 w-3 mr-1" />
+                  {hashtag}
+                  {!defaultHashtags.includes(hashtag) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveTag(hashtag);
+                      }}
+                      className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </Badge>
               ))}
               <Button

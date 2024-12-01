@@ -67,6 +67,7 @@ model user_tags {
   user_id    String   @db.VarChar(255)
   tag        String   @db.VarChar(50)
   created_at DateTime @default(now())
+  removed    Boolean  @default(false)
 
   @@unique([user_id, tag])
   @@index([user_id])
