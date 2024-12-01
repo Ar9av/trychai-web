@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const hashtag = searchParams.get('hashtag');
+  const startDate = searchParams.get('startDate');
   
   if (!hashtag) {
     return NextResponse.json({ error: 'Hashtag is required' }, { status: 400 });
@@ -18,7 +19,7 @@ export async function GET(req) {
       where: {
         hashtag: `#${hashtag.toLowerCase()}`,
         created_at: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+          gte: new Date(startDate || Date.now() - 7 * 24 * 60 * 60 * 1000)
         }
       },
       orderBy: {
@@ -31,7 +32,7 @@ export async function GET(req) {
     }
 
     // If no recent news, fetch and store new data
-    const news = await fetchAndStoreNews(hashtag);
+    const news = await fetchAndStoreNews(hashtag, startDate);
     return NextResponse.json(news);
   } catch (error) {
     console.error('Error fetching news:', error);
